@@ -178,17 +178,47 @@ def treatment_evidence(req: PredictRequest) -> TreatmentEvidenceResponse:
     )
 
 
-def _llm(prompt: str) -> str | None:
-    key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("LLM_API_KEY")
-    if not key:
+def _llm_endpoint() -> tuple[str, str, str] | None:
+    """Resolve (url, api_key, model) for the configured LLM provider, or None.
+
+    Supports xAI (Grok) and OpenRouter — both OpenAI-compatible chat-completions.
+    LLM_PROVIDER ("xai" | "openrouter") forces a choice; otherwise xAI wins if its key
+    is set, else OpenRouter. Each provider keeps its own model env so a deepseek default
+    never leaks into a Grok call.
+    """
+    provider = os.environ.get("LLM_PROVIDER", "").strip().lower()
+    xai = os.environ.get("XAI_API_KEY")
+    openrouter = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("LLM_API_KEY")
+
+    def _xai():
+        return ("https://api.x.ai/v1/chat/completions", xai, os.environ.get("XAI_MODEL", "grok-3"))
+
+    def _openrouter():
+        return ("https://openrouter.ai/api/v1/chat/completions", openrouter,
+                os.environ.get("LLM_MODEL", "deepseek/deepseek-chat"))
+
+    if provider == "xai" and xai:
+        return _xai()
+    if provider == "openrouter" and openrouter:
+        return _openrouter()
+    if xai:
+        return _xai()
+    if openrouter:
+        return _openrouter()
+    return None
+
+
+def _llm(prompt: str, max_tokens: int = 230) -> str | None:
+    cfg = _llm_endpoint()
+    if not cfg:
         return None
-    model = os.environ.get("LLM_MODEL", "deepseek/deepseek-chat")
+    url, key, model = cfg
     body = json.dumps({
-        "model": model, "max_tokens": 230, "temperature": 0.3,
+        "model": model, "max_tokens": max_tokens, "temperature": 0.3,
         "messages": [{"role": "user", "content": prompt}],
     }).encode("utf-8")
     rq = urllib.request.Request(
-        "https://openrouter.ai/api/v1/chat/completions", data=body,
+        url, data=body,
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
     )
     try:

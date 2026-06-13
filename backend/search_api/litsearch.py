@@ -124,4 +124,4 @@ def _llm_summary(query: str, articles) -> str | None:
         "main limitations (study type, size, certainty). Reference papers as [1], [2]. Stay grounded in the "
         "excerpts above — do not invent findings, dosing, or recommendations."
     )
-    return _llm(prompt)
+    return _llm(prompt, max_tokens=350)
