@@ -763,58 +763,7 @@
 
       <div class="nav-row">
         <a class="back-link" href="subtype_explorer_prototype.html">← Back to subtype explorer prototype</a>
-        <a class="back-link" href="treatment_predictor.html">Treatment predictor — “will it help me?” →</a>
       </div>
-
-      <section class="panel" id="tp-panel" style="margin-bottom:18px">
-        <style>
-          .tp-chips{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0 4px;}
-          .tp-chip{border:1px solid var(--line);border-radius:999px;padding:8px 15px;cursor:pointer;user-select:none;background:var(--bg-strong);font-size:14px;}
-          .tp-chip.on{background:var(--moss);border-color:var(--moss);color:#fff;}
-          .tp-field{margin-top:14px;} .tp-field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;}
-          .tp-field select{background:var(--bg-strong);color:var(--text);border:1px solid var(--line);border-radius:var(--radius-md);padding:10px 12px;font-size:14px;min-width:260px;}
-          .tp-go{margin-top:16px;background:var(--moss);color:#fff;border:0;border-radius:999px;padding:11px 24px;font-size:15px;font-weight:600;cursor:pointer;}
-          .tp-go:disabled{opacity:.55;cursor:default;}
-          .tp-row{display:flex;align-items:center;gap:14px;padding:13px 0;border-top:1px solid var(--line);}
-          .tp-row:first-of-type{border-top:0;} .tp-name{width:200px;flex:none;font-weight:600;font-size:14.5px;}
-          .tp-barwrap{flex:1;min-width:160px;} .tp-track{position:relative;height:24px;background:var(--stone);border-radius:8px;overflow:hidden;}
-          .tp-ci{position:absolute;top:0;height:100%;border-radius:8px;opacity:.55;} .tp-mark{position:absolute;top:-2px;width:3px;height:28px;border-radius:2px;}
-          .tp-meta{width:250px;flex:none;text-align:right;font-size:12.5px;color:var(--muted);} .tp-meta b{font-size:15px;}
-          .tp-tag{font-size:10.5px;border:1px solid var(--amber);color:var(--amber);border-radius:6px;padding:1px 6px;margin-left:6px;}
-          .tp-disc{color:var(--muted);font-size:12.5px;margin-top:14px;border-top:1px solid var(--line);padding-top:12px;}
-        </style>
-        <div class="section-head">
-          <h2>Treatment predictor — will it likely help <em>me</em>?</h2>
-          <span>pick the variables we track → each treatment class's predicted chance of a positive experience, with a 95% CI</span>
-        </div>
-        <div class="tp-chips" id="tp-conds">
-          <div class="tp-chip" data-k="pots">POTS</div>
-          <div class="tp-chip" data-k="mcas">MCAS</div>
-          <div class="tp-chip" data-k="dysautonomia">Dysautonomia</div>
-          <div class="tp-chip" data-k="me_cfs">ME/CFS</div>
-          <div class="tp-chip" data-k="pem">PEM</div>
-          <div class="tp-chip" data-k="eds">EDS / hypermobility</div>
-          <div class="tp-chip" data-k="small_fiber_neuropathy">Small-fiber neuropathy</div>
-          <div class="tp-chip" data-k="fibromyalgia">Fibromyalgia</div>
-        </div>
-        <div class="tp-field">
-          <label>Functional status (one clean ladder, mild &rarr; bedbound)</label>
-          <select id="tp-sev">
-            <option value="">— not specified —</option>
-            <option value="mild">Mild — functional with limits</option>
-            <option value="moderate">Moderate — significantly reduced</option>
-            <option value="mobility_limited">Mobility-limited — needs aids</option>
-            <option value="housebound">Housebound (incl. &ldquo;severe&rdquo;)</option>
-            <option value="bedbound">Bedbound (incl. &ldquo;very severe&rdquo;)</option>
-          </select>
-        </div>
-        <button class="tp-go" id="tp-go">Predict treatments</button>
-        <div id="tp-result" style="display:none;margin-top:16px">
-          <div style="color:var(--muted);font-size:14px;margin-bottom:4px" id="tp-profile"></div>
-          <div id="tp-rows"></div>
-          <div class="tp-disc" id="tp-disc"></div>
-        </div>
-      </section>
 
       <section class="app-grid">
         <main class="panel main">
@@ -1421,62 +1370,7 @@
       });
 
       initializeKeywordExplorer();
-
-      // --- treatment predictor (our per-category logit models, with CIs) ---
-      (function () {
-        const sel = new Set();
-        document.querySelectorAll("#tp-conds .tp-chip").forEach((ch) =>
-          ch.addEventListener("click", () => {
-            ch.classList.toggle("on");
-            const k = ch.dataset.k;
-            sel.has(k) ? sel.delete(k) : sel.add(k);
-          })
-        );
-        const moss = "#4f6654", amber = "#9b6a34", clay = "#a35442";
-        const ink = (p) => (p >= 70 ? moss : p >= 50 ? amber : clay);
-        const band = (p) => (p >= 70 ? "rgba(79,102,84,.45)" : p >= 50 ? "rgba(155,106,52,.40)" : "rgba(163,84,66,.38)");
-        const btn = document.getElementById("tp-go");
-        btn.addEventListener("click", async () => {
-          btn.disabled = true;
-          btn.textContent = "Predicting…";
-          try {
-            const res = await fetch("/api/predict", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ conditions: [...sel], severity: document.getElementById("tp-sev").value || null }),
-            });
-            const data = await res.json();
-            document.getElementById("tp-profile").textContent = data.profile.length
-              ? "Profile: " + data.profile.join(" · ")
-              : "No variables selected — showing the baseline population.";
-            const rows = document.getElementById("tp-rows");
-            rows.innerHTML = "";
-            data.predictions.forEach((p) => {
-              const dtxt =
-                p.delta === 0 ? "same as baseline" : (p.delta > 0 ? "▲ +" + p.delta : "▼ " + p.delta) + "pp vs baseline";
-              const div = document.createElement("div");
-              div.className = "tp-row";
-              div.innerHTML =
-                '<div class="tp-name">' + escapeHtml(p.category) + "</div>" +
-                '<div class="tp-barwrap"><div class="tp-track">' +
-                '<div class="tp-ci" style="left:' + p.ci_lo + "%;width:" + Math.max(1, p.ci_hi - p.ci_lo) + "%;background:" + band(p.p_positive) + '"></div>' +
-                '<div class="tp-mark" style="left:' + p.p_positive + "%;background:" + ink(p.p_positive) + '"></div>' +
-                "</div></div>" +
-                '<div class="tp-meta"><b style="color:' + ink(p.p_positive) + '">' + p.p_positive + "%</b> [" + p.ci_lo + "–" + p.ci_hi + "]" +
-                (p.confidence === "limited" ? '<span class="tp-tag">limited n=' + p.n + "</span>" : " · n=" + p.n) +
-                "<br>" + dtxt + (p.drivers.length ? " · " + p.drivers.join(", ") : "") + "</div>";
-              rows.appendChild(div);
-            });
-            document.getElementById("tp-disc").textContent = data.disclaimer;
-            document.getElementById("tp-result").style.display = "block";
-          } catch (e) {
-            alert("Prediction failed: " + e);
-          } finally {
-            btn.disabled = false;
-            btn.textContent = "Predict treatments";
-          }
-        });
-      })();
     </script>
+    <script src="/litsearch.js"></script>
   </body>
 </html>

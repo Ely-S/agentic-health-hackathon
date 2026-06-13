@@ -14,6 +14,8 @@ from backend.search_api.models import (
     PostDetailResponse,
     ExplainRequest,
     ExplainResponse,
+    LitSearchRequest,
+    LitSearchResponse,
     PredictRequest,
     PredictResponse,
     TreatmentEvidenceResponse,
@@ -23,6 +25,7 @@ from backend.search_api.models import (
 from backend.search_api.comorbidity import comorbidity as comorbidity_patterns
 from backend.search_api.evidence import explain as explain_treatment
 from backend.search_api.evidence import treatment_evidence
+from backend.search_api.litsearch import lit_search
 from backend.search_api.predict import predict as predict_treatments
 from backend.search_api.service import get_metadata, get_post_detail, get_user_posts, keyword_search
 from backend.shared_db import BASE_DIR, DB_PATH
@@ -32,6 +35,7 @@ FRONTEND_DIR = BASE_DIR.parent / "frontend"
 WEIGHTED_PAGE = FRONTEND_DIR / "weighted_keyword_explorer.html"
 PROTOTYPE_PAGE = FRONTEND_DIR / "subtype_explorer_prototype.html"
 PREDICT_PAGE = FRONTEND_DIR / "treatment_predictor.html"
+LITSEARCH_JS = FRONTEND_DIR / "litsearch.js"
 
 app = FastAPI(
     title="PatientPunk Weighted Search API",
@@ -91,6 +95,12 @@ def api_comorbidity(request: PredictRequest) -> ComorbidityResponse:
     return comorbidity_patterns(request)
 
 
+@app.post("/api/lit-search", response_model=LitSearchResponse)
+def api_lit_search(request: LitSearchRequest) -> LitSearchResponse:
+    """Free-text literature search + deterministic evidence summary (PubMed/Europe PMC/OpenAlex)."""
+    return lit_search(request)
+
+
 @app.post("/api/explain", response_model=ExplainResponse)
 def api_explain(request: ExplainRequest) -> ExplainResponse:
     """Real-time LLM explanation of why a treatment class might help this profile (falls back if no key)."""
@@ -118,3 +128,8 @@ def subtype_explorer_prototype() -> FileResponse:
 @app.get("/treatment_predictor.html", include_in_schema=False)
 def treatment_predictor() -> FileResponse:
     return FileResponse(PREDICT_PAGE)
+
+
+@app.get("/litsearch.js", include_in_schema=False)
+def litsearch_js() -> FileResponse:
+    return FileResponse(LITSEARCH_JS, media_type="application/javascript")

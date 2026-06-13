@@ -221,6 +221,46 @@ class ComorbidityResponse(BaseModel):
     )
 
 
+class LitSearchRequest(BaseModel):
+    """Free-text (and/or canonical-concept) literature search over PubMed et al."""
+    query: str = Field(default="", max_length=200)
+    concepts: list[str] = Field(default_factory=list, max_length=10)
+    max_results: int = Field(default=10, ge=1, le=25)
+
+
+class LitClaim(BaseModel):
+    text: str
+    citation_ids: list[str] = []
+
+
+class LitSection(BaseModel):
+    title: str
+    claims: list[LitClaim] = []
+
+
+class LitArticle(BaseModel):
+    citation_id: str
+    title: str
+    url: str
+    journal: str | None = None
+    year: int | None = None
+    pmid: str | None = None
+    doi: str | None = None
+    evidence_type: str | None = None
+    signal: str | None = None        # positive | mixed_or_negative | neutral | insufficient
+    citation_count: int | None = None
+    open_access: bool = False
+    abstract: str = ""
+
+
+class LitSearchResponse(BaseModel):
+    query: str
+    disclaimer: str = ""
+    sections: list[LitSection] = []
+    articles: list[LitArticle] = []
+    error: str | None = None         # set if the lookup failed (network, no results)
+
+
 class ExplainRequest(BaseModel):
     category: str = Field(min_length=1, max_length=80)
     conditions: list[str] = Field(default_factory=list, max_length=20)
