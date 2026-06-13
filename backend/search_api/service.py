@@ -521,6 +521,12 @@ def _top_practitioners(
     limit: int = 8,
     min_users: int = 2,
 ) -> list[PractitionerMention]:
+    # The practitioner-mentions table is produced by scripts/extract_persons.py (spaCy NER).
+    # Degrade gracefully on corpora that haven't run it rather than 500-ing keyword search.
+    if not con.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='post_practitioner_mentions'"
+    ).fetchone():
+        return []
     cte, params, _, _, _, cohort_condition, _, _ = _build_scored_posts_cte(terms)
     rows = con.execute(
         f"""
