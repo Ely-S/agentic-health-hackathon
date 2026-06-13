@@ -39,6 +39,8 @@ LABEL = {
 
 with open(MODELS_PATH, encoding="utf-8") as _f:
     MODELS = json.load(_f)   # group -> {predictors, beta, cov, n}
+_CLASSES_PATH = Path(__file__).resolve().parent / "drug_classes.json"
+SAMPLE_DRUGS = json.load(open(_CLASSES_PATH, encoding="utf-8")) if _CLASSES_PATH.exists() else {}
 
 
 def _sigmoid(x: float) -> float:
@@ -82,6 +84,7 @@ def predict(req: PredictRequest) -> PredictResponse:
                 n=m["n"],
                 drivers=driver_str,
                 confidence="good" if m["n"] >= 150 else "limited",
+                sample_drugs=SAMPLE_DRUGS.get(group, [])[:6],
             )
         )
     predictions.sort(key=lambda t: -t.p_positive)

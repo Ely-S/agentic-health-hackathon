@@ -11,11 +11,16 @@ from backend.search_api.models import (
     KeywordSearchResponse,
     MetadataResponse,
     PostDetailResponse,
+    ExplainRequest,
+    ExplainResponse,
     PredictRequest,
     PredictResponse,
+    TreatmentEvidenceResponse,
     UserPostsRequest,
     UserPostsResponse,
 )
+from backend.search_api.evidence import explain as explain_treatment
+from backend.search_api.evidence import treatment_evidence
 from backend.search_api.predict import predict as predict_treatments
 from backend.search_api.service import get_metadata, get_post_detail, get_user_posts, keyword_search
 from backend.shared_db import BASE_DIR, DB_PATH
@@ -70,6 +75,18 @@ def api_user_posts(request: UserPostsRequest) -> UserPostsResponse:
 def api_predict(request: PredictRequest) -> PredictResponse:
     """Predict each drug-class's chance of a positive experience for a patient's tracked variables."""
     return predict_treatments(request)
+
+
+@app.post("/api/treatment-evidence", response_model=TreatmentEvidenceResponse)
+def api_treatment_evidence(request: PredictRequest) -> TreatmentEvidenceResponse:
+    """Predictions + a real similar-patient cohort (shared conditions) + quoteable evidence per class."""
+    return treatment_evidence(request)
+
+
+@app.post("/api/explain", response_model=ExplainResponse)
+def api_explain(request: ExplainRequest) -> ExplainResponse:
+    """Real-time LLM explanation of why a treatment class might help this profile (falls back if no key)."""
+    return explain_treatment(request)
 
 
 @app.get("/api/post/{post_id}", response_model=PostDetailResponse)

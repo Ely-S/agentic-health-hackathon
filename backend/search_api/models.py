@@ -167,6 +167,8 @@ class TreatmentPrediction(BaseModel):
     n: int                        # reports the model was fit on (support / confidence)
     drivers: list[str]            # which of the patient's variables pushed it up/down
     confidence: str               # "good" | "limited" (from n)
+    sample_drugs: list[str] = []  # representative drugs in this class (for tooltips)
+    evidence_count: int = 0       # reports from similar-cohort patients for this class
 
 
 class PredictResponse(BaseModel):
@@ -176,3 +178,35 @@ class PredictResponse(BaseModel):
         "Hypothesis-generating decision support from lived-experience reports — NOT medical "
         "advice. Predictions are from a logistic model on observational, self-reported data."
     )
+
+
+class Quote(BaseModel):
+    text: str
+    drug: str
+    sentiment: str
+    post_id: str
+
+
+class TreatmentEvidenceResponse(BaseModel):
+    """Predictions + a real similar-patient cohort + quoteable evidence per class."""
+    profile: list[str]
+    matched_patients: int
+    quoteable: int
+    predictions: list[TreatmentPrediction]
+    quotes: dict[str, list[Quote]] = {}        # category -> sample quotes from the cohort
+    disclaimer: str = (
+        "Decision support from lived-experience reports — NOT medical advice. Cohort = patients "
+        "with overlapping conditions; predictions are from a logistic model on self-reported data."
+    )
+
+
+class ExplainRequest(BaseModel):
+    category: str = Field(min_length=1, max_length=80)
+    conditions: list[str] = Field(default_factory=list, max_length=20)
+    severity: str | None = Field(default=None, max_length=40)
+
+
+class ExplainResponse(BaseModel):
+    category: str
+    text: str
+    source: str   # "llm" or "fallback"
