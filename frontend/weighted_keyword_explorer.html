@@ -86,6 +86,7 @@
         align-items: end;
         gap: 24px;
         margin: 28px 0 24px;
+        overflow: hidden;
       }
 
       .hero h1 {
@@ -98,12 +99,16 @@
         letter-spacing: -0.03em;
       }
 
-      .hero p {
-        max-width: 760px;
-        margin: 14px 0 0;
-        color: var(--muted);
-        font-size: 17px;
-        line-height: 1.65;
+      .hero-crowd {
+        flex: 0 0 520px;
+        height: 120px;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .hero-crowd svg {
+        width: 100%;
+        height: 100%;
       }
 
       .nav-row {
@@ -516,6 +521,53 @@
         line-height: 1.45;
       }
 
+      .keyword-practitioner-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .keyword-practitioner-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.68);
+      }
+
+      .keyword-practitioner-info {
+        display: grid;
+        gap: 3px;
+      }
+
+      .keyword-practitioner-info strong {
+        font-size: 15px;
+      }
+
+      .keyword-practitioner-info span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .keyword-practitioner-count {
+        text-align: right;
+        flex-shrink: 0;
+      }
+
+      .keyword-practitioner-count strong {
+        display: block;
+        font-size: 24px;
+        letter-spacing: -0.04em;
+        color: var(--moss);
+      }
+
+      .keyword-practitioner-count span {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
       .keyword-treatment-score {
         text-align: right;
       }
@@ -637,18 +689,75 @@
     <div class="shell">
       <div class="banner">
         <span><strong>Self-reported, AI-extracted patient experience.</strong> Not medical advice.</span>
-        <span>Rank posts transparently, keep denominators visible, and inspect the source text before interpreting treatment signals.</span>
+
       </div>
 
       <section class="hero">
         <div>
           <h1>Patients Like Me</h1>
-          <p>
-            Add symptoms, diagnoses, or free-text phrases with high, medium, or low weight, or mark
-            terms to exclude. The page ranks posts from <code>posts.db</code> by cumulative keyword
-            overlap, shows how the cohort changes as you add filters, and summarizes the top
-            treatments reported by the matched users.
-          </p>
+        </div>
+        <div class="hero-crowd" aria-hidden="true">
+          <svg viewBox="0 0 900 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax meet">
+            <!-- back row -->
+            <g opacity="0.28" fill="#4f6654">
+              <circle cx="30"  cy="52" r="7"/><rect x="23"  y="60" width="14" height="26" rx="5"/>
+              <circle cx="68"  cy="48" r="7"/><rect x="61"  y="56" width="14" height="26" rx="5"/>
+              <circle cx="108" cy="54" r="7"/><rect x="101" y="62" width="14" height="26" rx="5"/>
+              <circle cx="148" cy="50" r="7"/><rect x="141" y="58" width="14" height="26" rx="5"/>
+              <circle cx="188" cy="53" r="7"/><rect x="181" y="61" width="14" height="26" rx="5"/>
+              <circle cx="228" cy="49" r="7"/><rect x="221" y="57" width="14" height="26" rx="5"/>
+              <circle cx="268" cy="52" r="7"/><rect x="261" y="60" width="14" height="26" rx="5"/>
+              <circle cx="308" cy="47" r="7"/><rect x="301" y="55" width="14" height="26" rx="5"/>
+              <circle cx="348" cy="54" r="7"/><rect x="341" y="62" width="14" height="26" rx="5"/>
+              <circle cx="388" cy="50" r="7"/><rect x="381" y="58" width="14" height="26" rx="5"/>
+              <circle cx="428" cy="53" r="7"/><rect x="421" y="61" width="14" height="26" rx="5"/>
+              <circle cx="468" cy="48" r="7"/><rect x="461" y="56" width="14" height="26" rx="5"/>
+              <circle cx="508" cy="52" r="7"/><rect x="501" y="60" width="14" height="26" rx="5"/>
+              <circle cx="548" cy="50" r="7"/><rect x="541" y="58" width="14" height="26" rx="5"/>
+              <circle cx="588" cy="54" r="7"/><rect x="581" y="62" width="14" height="26" rx="5"/>
+              <circle cx="628" cy="49" r="7"/><rect x="621" y="57" width="14" height="26" rx="5"/>
+              <circle cx="668" cy="52" r="7"/><rect x="661" y="60" width="14" height="26" rx="5"/>
+              <circle cx="708" cy="47" r="7"/><rect x="701" y="55" width="14" height="26" rx="5"/>
+              <circle cx="748" cy="53" r="7"/><rect x="741" y="61" width="14" height="26" rx="5"/>
+              <circle cx="788" cy="50" r="7"/><rect x="781" y="58" width="14" height="26" rx="5"/>
+              <circle cx="828" cy="54" r="7"/><rect x="821" y="62" width="14" height="26" rx="5"/>
+              <circle cx="868" cy="48" r="7"/><rect x="861" y="56" width="14" height="26" rx="5"/>
+            </g>
+            <!-- front row -->
+            <g opacity="0.55" fill="#4f6654">
+              <circle cx="10"  cy="76" r="9"/><rect x="2"   y="86" width="18" height="32" rx="6"/>
+              <circle cx="49"  cy="70" r="9"/><rect x="41"  y="80" width="18" height="32" rx="6"/>
+              <circle cx="89"  cy="78" r="9"/><rect x="81"  y="88" width="18" height="32" rx="6"/>
+              <circle cx="129" cy="72" r="9"/><rect x="121" y="82" width="18" height="32" rx="6"/>
+              <circle cx="169" cy="76" r="9"/><rect x="161" y="86" width="18" height="32" rx="6"/>
+              <circle cx="209" cy="71" r="9"/><rect x="201" y="81" width="18" height="32" rx="6"/>
+              <circle cx="249" cy="75" r="9"/><rect x="241" y="85" width="18" height="32" rx="6"/>
+              <circle cx="289" cy="69" r="9"/><rect x="281" y="79" width="18" height="32" rx="6"/>
+              <circle cx="329" cy="77" r="9"/><rect x="321" y="87" width="18" height="32" rx="6"/>
+              <circle cx="369" cy="73" r="9"/><rect x="361" y="83" width="18" height="32" rx="6"/>
+              <circle cx="409" cy="76" r="9"/><rect x="401" y="86" width="18" height="32" rx="6"/>
+              <circle cx="449" cy="70" r="9"/><rect x="441" y="80" width="18" height="32" rx="6"/>
+              <circle cx="489" cy="75" r="9"/><rect x="481" y="85" width="18" height="32" rx="6"/>
+              <circle cx="529" cy="72" r="9"/><rect x="521" y="82" width="18" height="32" rx="6"/>
+              <circle cx="569" cy="78" r="9"/><rect x="561" y="88" width="18" height="32" rx="6"/>
+              <circle cx="609" cy="71" r="9"/><rect x="601" y="81" width="18" height="32" rx="6"/>
+              <circle cx="649" cy="75" r="9"/><rect x="641" y="85" width="18" height="32" rx="6"/>
+              <circle cx="689" cy="69" r="9"/><rect x="681" y="79" width="18" height="32" rx="6"/>
+              <circle cx="729" cy="76" r="9"/><rect x="721" y="86" width="18" height="32" rx="6"/>
+              <circle cx="769" cy="73" r="9"/><rect x="761" y="83" width="18" height="32" rx="6"/>
+              <circle cx="809" cy="77" r="9"/><rect x="801" y="87" width="18" height="32" rx="6"/>
+              <circle cx="849" cy="70" r="9"/><rect x="841" y="80" width="18" height="32" rx="6"/>
+              <circle cx="889" cy="75" r="9"/><rect x="881" y="85" width="18" height="32" rx="6"/>
+            </g>
+            <!-- fade out at bottom -->
+            <rect x="0" y="80" width="900" height="40" fill="url(#crowd-fade)"/>
+            <defs>
+              <linearGradient id="crowd-fade" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f8f4ec" stop-opacity="0"/>
+                <stop offset="100%" stop-color="#f8f4ec" stop-opacity="1"/>
+              </linearGradient>
+            </defs>
+          </svg>
         </div>
       </section>
 
@@ -726,6 +835,14 @@
                   <span id="keyword-treatments-caption">aggregated across users whose posts match the query</span>
                 </div>
                 <div class="keyword-treatment-list" id="keyword-treatment-list"></div>
+              </div>
+
+              <div class="workspace-card">
+                <div class="section-head">
+                  <h3>Practitioners Mentioned</h3>
+                  <span id="keyword-practitioners-caption">doctors &amp; specialists named by similar patients</span>
+                </div>
+                <div class="keyword-practitioner-list" id="keyword-practitioner-list"></div>
               </div>
             </div>
           </div>
@@ -970,9 +1087,11 @@
         const posts = document.getElementById("keyword-post-list");
         const users = document.getElementById("keyword-user-list");
         const treatments = document.getElementById("keyword-treatment-list");
+        const practitioners = document.getElementById("keyword-practitioner-list");
         const postsCaption = document.getElementById("keyword-posts-caption");
         const usersCaption = document.getElementById("keyword-users-caption");
         const treatmentsCaption = document.getElementById("keyword-treatments-caption");
+        const practitionersCaption = document.getElementById("keyword-practitioners-caption");
 
         posts.innerHTML = `
           <div class="keyword-empty">
@@ -989,9 +1108,15 @@
             <p>Top treatments for the matched users will appear here after the server returns cohort data.</p>
           </div>
         `;
+        practitioners.innerHTML = `
+          <div class="keyword-empty">
+            <p>Doctors and specialists mentioned by similar patients will appear here.</p>
+          </div>
+        `;
         postsCaption.textContent = "waiting for API search";
         usersCaption.textContent = "ranked from the current cohort";
         treatmentsCaption.textContent = "needs /api/keyword-search";
+        practitionersCaption.textContent = "doctors &amp; specialists named by similar patients";
       }
 
       function renderKeywordExplorer() {
@@ -1000,9 +1125,11 @@
         const posts = document.getElementById("keyword-post-list");
         const users = document.getElementById("keyword-user-list");
         const treatments = document.getElementById("keyword-treatment-list");
+        const practitioners = document.getElementById("keyword-practitioner-list");
         const postsCaption = document.getElementById("keyword-posts-caption");
         const usersCaption = document.getElementById("keyword-users-caption");
         const treatmentsCaption = document.getElementById("keyword-treatments-caption");
+        const practitionersCaption = document.getElementById("keyword-practitioners-caption");
 
         if (!keywordLastResults) {
           renderInitialState();
@@ -1098,11 +1225,38 @@
               </div>
             `;
 
+        const topPractitioners = keywordLastResults.top_practitioners || [];
+        practitioners.innerHTML = topPractitioners.length
+          ? topPractitioners
+              .map(
+                (p) => `
+                  <div class="keyword-practitioner-row">
+                    <div class="keyword-practitioner-info">
+                      <strong>${escapeHtml(p.name)}</strong>
+                      <span>${p.mention_count} mention${p.mention_count === 1 ? "" : "s"} across matched posts</span>
+                    </div>
+                    <div class="keyword-practitioner-count">
+                      <strong>${p.unique_users}</strong>
+                      <span>patient${p.unique_users === 1 ? "" : "s"}</span>
+                    </div>
+                  </div>
+                `
+              )
+              .join("")
+          : `
+              <div class="keyword-empty">
+                <p>No practitioners were mentioned by enough patients in this cohort.</p>
+              </div>
+            `;
+
         postsCaption.textContent = selectedUserId
           ? `${escapeHtml(formatUserLabel(selectedUserId))} · ${displayedPosts.length.toLocaleString()} matched posts`
           : `${keywordLastResults.counts.matched_posts.toLocaleString()} posts ranked from ${escapeHtml(keywordLastResults.source)}`;
         usersCaption.textContent = `${keywordLastResults.ranked_users.length.toLocaleString()} users ranked from the current cohort`;
         treatmentsCaption.textContent = `${keywordLastResults.counts.matched_users.toLocaleString()} matched users drive this treatment rollup`;
+        practitionersCaption.textContent = topPractitioners.length
+          ? `${topPractitioners.length} practitioners named by similar patients`
+          : "doctors &amp; specialists named by similar patients";
       }
 
       async function loadUserPosts(userId) {
