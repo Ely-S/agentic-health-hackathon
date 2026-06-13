@@ -1117,6 +1117,18 @@
       </section>
 
       <section class="app-grid">
+        <style>
+          #sx-conds .chip { cursor: pointer; }
+          .sx-info { color: var(--muted); font-size: 12px; cursor: help; }
+          .sx-ci-track { position: relative; height: 22px; background: var(--stone); border-radius: 8px; overflow: hidden; margin-top: 12px; }
+          .sx-ci-band { position: absolute; top: 0; height: 100%; border-radius: 8px; opacity: .55; }
+          .sx-ci-mark { position: absolute; top: -2px; width: 3px; height: 26px; border-radius: 2px; }
+          .sx-scale { display: flex; justify-content: space-between; color: var(--muted); font-size: 10.5px; margin-top: 3px; }
+          .sx-why { margin-top: 10px; padding: 10px 12px; background: var(--bg-strong); border: 1px solid var(--line); border-radius: var(--radius-md); font-size: 13.5px; line-height: 1.55; }
+          .sx-quotes { margin-top: 10px; display: grid; gap: 8px; }
+          .sx-quote { margin: 0; padding: 8px 12px; background: var(--bg-strong); border-left: 3px solid var(--moss-soft); border-radius: 8px; font-size: 12.5px; }
+          .sx-qmeta { color: var(--muted); font-size: 11px; }
+        </style>
         <aside class="panel sidebar">
           <div class="section-head">
             <h3>Patient Profile</h3>
@@ -1125,77 +1137,42 @@
 
           <div class="stack">
             <div class="field">
-              <label>Conditions</label>
-              <div class="chips">
-                <span class="chip active">Long COVID</span>
-                <span class="chip active">POTS</span>
-                <span class="chip active">MCAS</span>
-                <span class="chip">PEM</span>
-                <span class="chip">ME/CFS</span>
+              <label>Conditions (what our pipeline extracts &amp; models)</label>
+              <div class="chips" id="sx-conds">
+                <span class="chip active" data-k="pots">POTS</span>
+                <span class="chip active" data-k="mcas">MCAS</span>
+                <span class="chip" data-k="dysautonomia">Dysautonomia</span>
+                <span class="chip" data-k="me_cfs">ME/CFS</span>
+                <span class="chip" data-k="pem">PEM</span>
+                <span class="chip" data-k="eds">EDS / hypermobility</span>
+                <span class="chip" data-k="small_fiber_neuropathy">Small-fiber neuropathy</span>
+                <span class="chip" data-k="fibromyalgia">Fibromyalgia</span>
               </div>
             </div>
 
             <div class="field">
-              <label>Primary symptoms</label>
-              <div class="chips">
-                <span class="chip active">Brain fog</span>
-                <span class="chip active">Fatigue / PEM</span>
-                <span class="chip active">Orthostatic intolerance</span>
-                <span class="chip">Histamine flares</span>
-                <span class="chip">Sleep disruption</span>
-                <span class="chip">Pain</span>
-              </div>
-            </div>
-
-            <div class="field">
-              <label>Functional status</label>
-              <div class="select"><span>Housebound</span><span>▾</span></div>
-            </div>
-
-            <div class="field">
-              <label>Symptom trajectory</label>
-              <div class="select"><span>Relapsing</span><span>▾</span></div>
-            </div>
-
-            <div class="field">
-              <label>Onset trigger</label>
-              <div class="select"><span>COVID</span><span>▾</span></div>
-            </div>
-
-            <div class="field">
-              <label>Duration</label>
-              <div class="select"><span>2+ years</span><span>▾</span></div>
-            </div>
-
-            <div class="field">
-              <label>Treatments already tried</label>
-              <div class="chips">
-                <span class="chip">Famotidine</span>
-                <span class="chip">Cetirizine</span>
-                <span class="chip">Ivabradine</span>
-              </div>
-            </div>
-
-            <div class="field">
-              <label>Prior treatment responses</label>
-              <div class="stack">
-                <div class="select"><span>Famotidine · partial benefit</span><span>▾</span></div>
-                <div class="select"><span>Cetirizine · no clear effect</span><span>▾</span></div>
-                <div class="select"><span>Ivabradine · worsened symptoms</span><span>▾</span></div>
-              </div>
+              <label>Functional status (one clean ladder, mild &rarr; bedbound)</label>
+              <select id="sx-sev" class="text-input">
+                <option value="">— not specified —</option>
+                <option value="mild">Mild — functional with limits</option>
+                <option value="moderate">Moderate — significantly reduced</option>
+                <option value="mobility_limited">Mobility-limited — needs aids</option>
+                <option value="housebound" selected>Housebound (incl. &ldquo;severe&rdquo;)</option>
+                <option value="bedbound">Bedbound (incl. &ldquo;very severe&rdquo;)</option>
+              </select>
             </div>
 
             <div class="subtle-card">
               <p>
-                Matching prioritizes canonical condition overlap, symptom-domain overlap, then severity,
-                trajectory, onset, duration, and prior treatment response patterns. Diagnosis mode also
-                highlights missing evidence instead of pretending every pattern is complete.
+                These are the variables our pipeline actually extracts and models.
+                <strong>Find Similar Patients</strong> pulls a real cohort that shares these conditions,
+                then ranks treatment classes with a logistic model fit on corrected, self-reported
+                outcomes — with 95% confidence intervals and a real-time, profile-specific explanation.
               </p>
             </div>
 
             <div class="button-row">
-              <button class="button primary">Find Similar Patients</button>
-              <button class="button">Load Example</button>
+              <button class="button primary" id="sx-find">Find Similar Patients</button>
             </div>
           </div>
         </aside>
@@ -1228,10 +1205,10 @@
             </div>
 
             <div class="cohort-card">
-              <div class="metric"><strong>150</strong><span>matched patients</span></div>
-              <div class="metric"><strong>118</strong><span>quoteable evidence</span></div>
-              <div class="metric"><strong>74%</strong><span>high quality</span></div>
-              <div class="metric"><strong>5</strong><span>core filters used</span></div>
+              <div class="metric"><strong id="sx-matched">—</strong><span>matched patients</span></div>
+              <div class="metric"><strong id="sx-quoteable">—</strong><span>with treatment reports</span></div>
+              <div class="metric"><strong id="sx-classes">9</strong><span>treatment classes modeled</span></div>
+              <div class="metric"><strong id="sx-condcount">—</strong><span>conditions selected</span></div>
             </div>
 
             <div class="cards" id="treatment-cards"></div>
@@ -1586,60 +1563,102 @@
           : "support-medium";
       }
 
+      function sxInk(p) { return p >= 70 ? "#4f6654" : p >= 50 ? "#9b6a34" : "#a35442"; }
+      function sxBand(p) { return p >= 70 ? "rgba(79,102,84,.45)" : p >= 50 ? "rgba(155,106,52,.40)" : "rgba(163,84,66,.38)"; }
+
       function renderTreatmentCards() {
         const container = document.getElementById("treatment-cards");
-        container.innerHTML = Object.values(treatmentData)
-          .map((item) => {
-            const total = item.totalReports;
-            const pos = ((item.positive / total) * 100).toFixed(1);
-            const neg = ((item.negative / total) * 100).toFixed(1);
-            const mix = ((item.mixed / total) * 100).toFixed(1);
+        if (!window.EVIDENCE) {
+          container.innerHTML = '<div class="subtle-card"><p>Select your conditions, then click <strong>Find Similar Patients</strong> to see each treatment class’s predicted chance of helping someone like you.</p></div>';
+          return;
+        }
+        const ev = window.EVIDENCE;
+        container.innerHTML = ev.predictions
+          .map((p) => {
+            const quotes = ev.quotes[p.category] || [];
+            const samples = (p.sample_drugs || []).join(", ");
+            const dtxt = p.delta === 0 ? "same as baseline" : (p.delta > 0 ? "▲ +" + p.delta : "▼ " + p.delta) + "pp vs baseline";
+            const tier = p.confidence === "limited" ? "warning" : "support-high";
+            const tierLbl = p.confidence === "limited" ? "limited · n=" + p.n : "n=" + p.n;
             return `
-              <article class="treatment-card ${selectedTreatment === item.key ? "selected" : ""}" data-treatment="${item.key}">
+              <article class="treatment-card">
                 <div class="treatment-head">
                   <div class="treatment-title">
-                    <div class="pill ${supportClass(item.support)}" style="width: fit-content;">${item.support}</div>
-                    <h4>${item.name}</h4>
-                    <p>${item.summary}</p>
+                    <div class="pill ${tier}" style="width: fit-content;">${tierLbl}</div>
+                    <h4 title="Examples: ${samples}">${p.category} <span class="sx-info" title="Examples: ${samples}">ⓘ</span></h4>
+                    <p>e.g. ${samples}</p>
                   </div>
                   <div class="score">
-                    <strong>${item.pct}</strong>
-                    <span>positive reports</span>
+                    <strong style="color:${sxInk(p.p_positive)}">${p.p_positive}%</strong>
+                    <span>predicted positive · ${dtxt}</span>
                   </div>
                 </div>
-                <div class="stats-row">
-                  <div class="stat"><strong>${item.uniquePatients}</strong><span>unique patients</span></div>
-                  <div class="stat"><strong>${item.totalReports}</strong><span>total reports</span></div>
-                  <div class="stat"><strong>${item.positive}</strong><span>positive</span></div>
-                  <div class="stat"><strong>${item.negative}</strong><span>negative</span></div>
+                <div class="sx-ci-track">
+                  <div class="sx-ci-band" style="left:${p.ci_lo}%;width:${Math.max(1, p.ci_hi - p.ci_lo)}%;background:${sxBand(p.p_positive)}"></div>
+                  <div class="sx-ci-mark" style="left:${p.p_positive}%;background:${sxInk(p.p_positive)}"></div>
                 </div>
-                <div class="bar">
-                  <div class="pos" style="width: ${pos}%"></div>
-                  <div class="neg" style="width: ${neg}%"></div>
-                  <div class="mix" style="width: ${mix}%"></div>
+                <div class="sx-scale"><span>0%</span><span>50%</span><span>100%</span></div>
+                <div class="stats-row">
+                  <div class="stat"><strong>${p.p_positive}%</strong><span>predicted</span></div>
+                  <div class="stat"><strong>${p.ci_lo}–${p.ci_hi}</strong><span>95% CI</span></div>
+                  <div class="stat"><strong>${p.evidence_count}</strong><span>cohort reports</span></div>
+                  <div class="stat"><strong>${p.n}</strong><span>model n</span></div>
                 </div>
                 <div class="response-row">
-                  ${item.responses.map((r) => `<span class="pill response">${r}</span>`).join("")}
+                  ${(p.drivers || []).map((d) => `<span class="pill response">${d}</span>`).join("")}
                 </div>
                 <div class="card-foot">
-                  <p>${item.sideEffects}</p>
                   <div class="actions">
-                    <button class="ghost" data-treatment-action="${item.key}">View Quotes</button>
-                    <button class="ghost" data-treatment-action="${item.key}">Inspect</button>
+                    <button class="ghost" data-why="${p.category}">Why might this help?</button>
                   </div>
+                  <div class="sx-why" data-whytext="${p.category}" hidden></div>
+                  ${quotes.length ? '<div class="sx-quotes">' + quotes.map((q) => `<blockquote class="sx-quote">“${q.text}” <span class="sx-qmeta">— ${q.drug}, ${q.sentiment}</span></blockquote>`).join("") + "</div>" : ""}
                 </div>
-              </article>
-            `;
+              </article>`;
           })
           .join("");
 
-        container.querySelectorAll("[data-treatment]").forEach((card) => {
-          card.addEventListener("click", () => {
-            selectedTreatment = card.dataset.treatment;
-            renderTreatmentCards();
-            if (currentMode === "treatment") renderDrawer();
+        container.querySelectorAll("[data-why]").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const cat = btn.dataset.why;
+            const box = container.querySelector(`[data-whytext="${CSS.escape(cat)}"]`);
+            if (box.dataset.loaded) { box.hidden = !box.hidden; return; }
+            const orig = btn.textContent; btn.textContent = "Thinking…"; btn.disabled = true;
+            try {
+              const res = await fetch("/api/explain", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ category: cat, conditions: (window.SX_PROFILE || {}).conditions || [], severity: (window.SX_PROFILE || {}).severity || null }),
+              });
+              const data = await res.json();
+              box.textContent = data.text; box.hidden = false; box.dataset.loaded = "1";
+            } catch (e) {
+              box.textContent = "Could not generate an explanation right now."; box.hidden = false;
+            } finally { btn.textContent = orig; btn.disabled = false; }
           });
         });
+      }
+
+      async function sxLoadEvidence() {
+        const conds = [...document.querySelectorAll("#sx-conds .chip.active")].map((c) => c.dataset.k);
+        const sev = document.getElementById("sx-sev").value || null;
+        window.SX_PROFILE = { conditions: conds, severity: sev };
+        const btn = document.getElementById("sx-find");
+        const orig = btn ? btn.textContent : "";
+        if (btn) { btn.textContent = "Finding…"; btn.disabled = true; }
+        try {
+          const res = await fetch("/api/treatment-evidence", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(window.SX_PROFILE),
+          });
+          window.EVIDENCE = await res.json();
+          const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+          set("sx-matched", (window.EVIDENCE.matched_patients || 0).toLocaleString());
+          set("sx-quoteable", (window.EVIDENCE.quoteable || 0).toLocaleString());
+          set("sx-condcount", conds.length);
+          renderTreatmentCards();
+        } catch (e) {
+          alert("Failed to load evidence: " + e);
+        } finally { if (btn) { btn.textContent = orig; btn.disabled = false; } }
       }
 
       function renderDiagnosisCards() {
@@ -1839,6 +1858,10 @@
       renderDiagnosisCards();
       renderDiagnosisWorkspace();
       renderDrawer();
+
+      const sxFindBtn = document.getElementById("sx-find");
+      if (sxFindBtn) sxFindBtn.addEventListener("click", sxLoadEvidence);
+      sxLoadEvidence();
     </script>
   </body>
 </html>
