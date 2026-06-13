@@ -1111,8 +1111,8 @@
         </div>
         <aside class="hero-meta">
           <span class="eyebrow">Current Cohort</span>
-          <span class="big">150 matched patients</span>
-          <span class="small">Median quality tier: High · 118 quoteable treatment posts · diagnosis mode stays suggestive, not diagnostic</span>
+          <span class="big"><span id="hero-matched">—</span> matched patients</span>
+          <span class="small"><span id="hero-quoteable">—</span> patients with quoteable treatment reports · diagnosis mode stays suggestive, not diagnostic</span>
         </aside>
       </section>
 
@@ -1347,6 +1347,8 @@
           const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
           set("sx-matched", (window.EVIDENCE.matched_patients || 0).toLocaleString());
           set("sx-quoteable", (window.EVIDENCE.quoteable || 0).toLocaleString());
+          set("hero-matched", (window.EVIDENCE.matched_patients || 0).toLocaleString());
+          set("hero-quoteable", (window.EVIDENCE.quoteable || 0).toLocaleString());
           set("sx-condcount", conds.length);
           const dx = document.getElementById("dx-summary");
           if (dx) dx.innerHTML = `<strong>${(window.COMORBIDITY.cohort_size || 0).toLocaleString()}</strong> patients share your conditions · enrichment vs <strong>${(window.COMORBIDITY.population || 0).toLocaleString()}</strong> total`;
