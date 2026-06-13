@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 
 from backend.search_api.models import (
+    ComorbidityResponse,
     KeywordSearchRequest,
     KeywordSearchResponse,
     MetadataResponse,
@@ -19,6 +20,7 @@ from backend.search_api.models import (
     UserPostsRequest,
     UserPostsResponse,
 )
+from backend.search_api.comorbidity import comorbidity as comorbidity_patterns
 from backend.search_api.evidence import explain as explain_treatment
 from backend.search_api.evidence import treatment_evidence
 from backend.search_api.predict import predict as predict_treatments
@@ -81,6 +83,12 @@ def api_predict(request: PredictRequest) -> PredictResponse:
 def api_treatment_evidence(request: PredictRequest) -> TreatmentEvidenceResponse:
     """Predictions + a real similar-patient cohort (shared conditions) + quoteable evidence per class."""
     return treatment_evidence(request)
+
+
+@app.post("/api/comorbidity", response_model=ComorbidityResponse)
+def api_comorbidity(request: PredictRequest) -> ComorbidityResponse:
+    """Diagnosis Evidence: conditions enriched (by lift) among patients sharing this profile."""
+    return comorbidity_patterns(request)
 
 
 @app.post("/api/explain", response_model=ExplainResponse)

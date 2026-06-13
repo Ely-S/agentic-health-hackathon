@@ -1223,53 +1223,24 @@
             <div class="diagnosis-toolbar">
               <div class="left">
                 <span class="pill support-medium">Pattern mode</span>
-                <div class="select" style="min-width: 250px; padding: 10px 12px;">
-                  <span>Explore from symptoms: orthostatic intolerance</span>
-                  <span>▾</span>
-                </div>
-                <div class="select" style="min-width: 210px; padding: 10px 12px;">
-                  <span>Include overlap diagnoses</span>
-                  <span>▾</span>
-                </div>
+                <span id="dx-summary" style="color: var(--muted); font-size: 13px;">Pick your conditions and click <strong>Find Similar Patients</strong>.</span>
               </div>
               <div class="right">
-                <span class="pill warning">Suggestive evidence only</span>
+                <span class="pill warning">Suggestive co-occurrence — not a diagnosis</span>
               </div>
             </div>
 
-            <div class="diagnosis-summary">
-              <div class="subtle-card">
-                <p>
-                  This mode flips the question from <strong>“what helped people like me?”</strong> to
-                  <strong>“what diagnoses or phenotypes recur in patients who look like me?”</strong>.
-                  It surfaces patterns from symptom overlap, co-condition structure, treatment-response
-                  hints, and source quotes, while keeping missing evidence visible.
-                </p>
-                <div class="signal-list">
-                  <div class="signal-item"><span><strong>Driving symptoms</strong></span><span>orthostatic intolerance, fatigue / PEM, brain fog</span></div>
-                  <div class="signal-item"><span><strong>Supporting clues</strong></span><span>histamine flares, trigger sensitivity, reduced activity tolerance</span></div>
-                  <div class="signal-item"><span><strong>Negative clues</strong></span><span>few autoimmune-history signals, sparse biomarker detail</span></div>
-                </div>
-              </div>
-              <div class="subtle-card">
-                <p><strong style="display:block;font-size:28px;color:var(--text);margin-bottom:6px;">3</strong>diagnosis patterns surfaced with medium+ support</p>
-                <div class="signal-list">
-                  <div class="signal-item"><span><strong>Best supported</strong></span><span>POTS-like autonomic pattern</span></div>
-                  <div class="signal-item"><span><strong>Most differentiated</strong></span><span>MCAS overlap phenotype</span></div>
-                  <div class="signal-item"><span><strong>Most uncertain</strong></span><span>ME/CFS phenotype until mapping is cleaned</span></div>
-                </div>
-              </div>
+            <div class="subtle-card" style="margin-bottom: 16px;">
+              <p>
+                This flips the question from <strong>“what helped people like me?”</strong> to
+                <strong>“what conditions recur in patients who look like me?”</strong> Each card below is a
+                condition that is <strong>enriched</strong> in your cohort — more common among patients who
+                share your conditions than in the full patient population (lift&nbsp;&gt;&nbsp;1×). These are
+                prompts to raise with a clinician, never a diagnosis.
+              </p>
             </div>
 
             <div class="diagnosis-grid" id="diagnosis-cards"></div>
-
-            <div class="diagnosis-workspace" style="margin-top: 16px;">
-              <div class="workspace-card" id="diagnosis-workspace-evidence"></div>
-              <div class="stack">
-                <div class="workspace-card" id="diagnosis-workspace-checklist"></div>
-                <div class="workspace-card" id="diagnosis-workspace-clinician"></div>
-              </div>
-            </div>
           </section>
 
         </main>
@@ -1281,287 +1252,7 @@
     </div>
 
     <script>
-      const treatmentData = {
-        ldn: {
-          key: "ldn",
-          name: "Low-dose naltrexone",
-          support: "High support",
-          summary: "Most consistent broad signal across this cohort, with strong quote availability.",
-          pct: "80%",
-          uniquePatients: 248,
-          totalReports: 449,
-          positive: 358,
-          negative: 76,
-          mixed: 15,
-          sideEffects: "Top side effects: insomnia, nausea, anxiety, brain fog",
-          responses: ["helped brain fog", "helped body aches", "mixed for sleep"],
-          drawerTitle: "Quote Evidence",
-          drawerSubtitle: "selected treatment: low-dose naltrexone",
-          drawerSummary: [
-            { big: "80%", text: "positive in POTS + MCAS slice" },
-            { big: "248", text: "unique patients overall" }
-          ],
-          quotes: [
-            {
-              text: "4.5mg LDN for a couple years and it definitely helped with body aches and fatigue by around twenty percent.",
-              meta: "Strong positive · long covid + pots + mcas"
-            },
-            {
-              text: "LDN lowered inflammation for me, which meant less anxiety, less brain fog, better sleep, and fewer body aches.",
-              meta: "Strong positive · high-quality patient record"
-            },
-            {
-              text: "It helped with body aches, but people seem to respond in very different ways, so I would not call it universal.",
-              meta: "Moderate positive · mixed caution preserved"
-            }
-          ],
-          comparisonTitle: "Subtype Comparison",
-          comparisonSubtitle: "why this result moved",
-          comparisonRows: [
-            ["Antihistamine · POTS + MCAS", "80% (220)"],
-            ["Antihistamine · POTS only", "60% (20)"],
-            ["Ivabradine · POTS + MCAS", "54% (13)"],
-            ["Ivabradine · POTS only", "96% (27)"]
-          ]
-        },
-        antihistamine: {
-          key: "antihistamine",
-          name: "Antihistamine",
-          support: "High support",
-          summary: "Notable subtype split: stronger in POTS + MCAS than POTS-only.",
-          pct: "74%",
-          uniquePatients: 216,
-          totalReports: 475,
-          positive: 350,
-          negative: 113,
-          mixed: 12,
-          sideEffects: "Top side effects: sleepy, weight gain, dehydration, fatigue",
-          responses: ["helped histamine flares", "helped tachycardia", "mixed for fatigue"],
-          drawerTitle: "Quote Evidence",
-          drawerSubtitle: "selected treatment: antihistamine",
-          drawerSummary: [
-            { big: "80%", text: "positive in POTS + MCAS slice" },
-            { big: "60%", text: "positive in POTS-only slice" }
-          ],
-          quotes: [
-            {
-              text: "Cetirizine and famotidine were the first things that noticeably settled my flushing and food-triggered flares.",
-              meta: "Strong positive · MCAS overlap clue"
-            },
-            {
-              text: "It helped the histamine-feeling crashes, but didn’t really solve the fatigue on its own.",
-              meta: "Moderate positive · symptom-specific benefit"
-            },
-            {
-              text: "Antihistamines made me too sleepy to function, even though they took the edge off some reactions.",
-              meta: "Negative / tradeoff · sedation burden"
-            }
-          ],
-          comparisonTitle: "Subtype Comparison",
-          comparisonSubtitle: "where this signal differentiates",
-          comparisonRows: [
-            ["Antihistamine · POTS + MCAS", "80% (220)"],
-            ["Antihistamine · POTS only", "60% (20)"],
-            ["Ketotifen · POTS + MCAS", "81% (36)"],
-            ["Ketotifen · POTS only", "—"]
-          ]
-        },
-        tirzepatide: {
-          key: "tirzepatide",
-          name: "Tirzepatide",
-          support: "High support",
-          summary: "Mixed but interesting signal. Worth inspection because response varies by subtype.",
-          pct: "68%",
-          uniquePatients: 69,
-          totalReports: 126,
-          positive: 85,
-          negative: 31,
-          mixed: 10,
-          sideEffects: "Top side effects: nausea, fatigue, crash, anxiety",
-          responses: ["helped energy", "mixed for orthostatic symptoms", "worsened nausea tolerance"],
-          drawerTitle: "Quote Evidence",
-          drawerSubtitle: "selected treatment: tirzepatide",
-          drawerSummary: [
-            { big: "74%", text: "positive in MCAS slice" },
-            { big: "49%", text: "positive in POTS slice" }
-          ],
-          quotes: [
-            {
-              text: "It helped my inflammation and appetite dysregulation more than my standing intolerance.",
-              meta: "Moderate positive · symptom-specific benefit"
-            },
-            {
-              text: "The nausea was rough at first, but energy and inflammation were better after a few weeks.",
-              meta: "Mixed positive · side-effect tradeoff"
-            },
-            {
-              text: "This one seemed promising for some people, but for me it just added side effects and more instability.",
-              meta: "Negative · variable response"
-            }
-          ],
-          comparisonTitle: "Condition Split",
-          comparisonSubtitle: "where response appears less stable",
-          comparisonRows: [
-            ["Tirzepatide · MCAS", "74% (53)"],
-            ["Tirzepatide · POTS", "49% (37)"],
-            ["Tirzepatide · Long COVID", "68% (93)"],
-            ["Tirzepatide · PEM", "57% (54)"]
-          ]
-        }
-      };
-
-      const diagnosisData = {
-        pots: {
-          key: "pots",
-          name: "POTS",
-          support: "Strong pattern",
-          supportClass: "support-high",
-          description: "Common among matched patients with orthostatic intolerance, tachycardia, and fatigue crashes.",
-          count: "345 similar records",
-          signalText: "High co-occurrence",
-          list: [
-            "Signals: orthostatic intolerance, palpitations, exercise intolerance",
-            "Common overlaps: Long COVID, MCAS, PEM",
-            "Evidence lane: quotes mentioning heart rate spikes, standing intolerance, tilt-table discussion",
-            "Clinician prompt: ask whether orthostatic vitals or formal autonomic testing would clarify the picture"
-          ],
-          workspace: {
-            subtitle: "selected pattern: POTS",
-            why: "POTS rises to the top because the current profile combines orthostatic symptoms, fatigue crashes, and a high overlap with long COVID + MCAS records. Similar patients often describe heart rate spikes when standing, needing to sit or lie down after minor exertion, and treatment experimentation with beta blockers, ivabradine, salt, or compression strategies.",
-            quotes: [
-              ["Standing to shower or cook would spike my heart rate and leave me wiped out for the rest of the day.", "Pattern clue · orthostatic intolerance"],
-              ["A lot of my symptoms looked like anxiety until I realized the problem was how extreme my heart rate got upright.", "Pattern clue · misattribution risk"],
-              ["Antihistamines helped some of the flares, but the standing intolerance still felt like its own separate problem.", "Overlap clue · POTS + MCAS phenotype"]
-            ],
-            clues: [
-              ["Orthostatic intolerance", "Core clue is present and repeatedly emphasized across matched records.", "present", "Present"],
-              ["Palpitations / heart rate spikes", "Indirectly supported by profile and similar-patient quotes, but still worth confirming explicitly.", "present", "Likely"],
-              ["PEM after exertion", "Strong overlap clue, but it may point to an overlapping phenotype rather than POTS alone.", "conflicting", "Overlap"],
-              ["Formal orthostatic vitals", "No structured evidence in the profile yet. This is a meaningful missing piece.", "missing", "Missing"],
-              ["Alternative explanations ruled out", "The dataset is weak on differential diagnosis, so this should stay with the clinician.", "missing", "Needed"]
-            ],
-            questions: [
-              "Do my symptoms justify checking orthostatic vitals or referral for autonomic testing?",
-              "Are my post-exertional crashes better explained by PEM, dysautonomia, or both?",
-              "If antihistamines affect flares but not standing intolerance, does that suggest an overlap pattern rather than one diagnosis?",
-              "What history or tests would help separate POTS-like symptoms from anxiety, deconditioning, or other causes?"
-            ],
-            drawerSummary: [
-              { big: "345", text: "similar records reference this pattern" },
-              { big: "High", text: "pattern support from symptom overlap" }
-            ],
-            drawerRows: [
-              ["Primary clue", "orthostatic intolerance"],
-              ["Overlap clue", "MCAS-like flare pattern"],
-              ["Missing evidence", "formal orthostatic vitals"],
-              ["Best next conversation", "autonomic workup questions"]
-            ]
-          }
-        },
-        mcas: {
-          key: "mcas",
-          name: "MCAS",
-          support: "Moderate pattern",
-          supportClass: "support-medium",
-          description: "Frequently appears in patients reporting histamine flares, food triggers, flushing, and antihistamine response.",
-          count: "298 similar records",
-          signalText: "Subtype differentiator",
-          list: [
-            "Signals: food reactions, flushing, symptom swings after meals or supplements",
-            "Common overlaps: POTS, Long COVID",
-            "Evidence lane: quote clusters around antihistamines, ketotifen, trigger tracking",
-            "Clinician prompt: review trigger patterns and whether antihistamine response is meaningful"
-          ],
-          workspace: {
-            subtitle: "selected pattern: MCAS overlap phenotype",
-            why: "MCAS-like overlap appears because the symptom profile includes histamine-style flares, food-triggered variability, and treatment patterns that track with antihistamines and ketotifen. This is best treated as a phenotype signal, not a lab-confirmed mast-cell diagnosis.",
-            quotes: [
-              ["Meals, supplements, and random foods could trigger flushing and a whole-body flare that felt different from my baseline fatigue.", "Pattern clue · trigger sensitivity"],
-              ["Antihistamines were one of the only things that reliably took the edge off the episodes.", "Pattern clue · response hint"],
-              ["I only understood the pattern after keeping a log of foods, symptoms, and reactions.", "Pattern clue · self-tracking evidence"]
-            ],
-            clues: [
-              ["Food or supplement-triggered flares", "Strongly aligned with the pattern surfaced in similar patients.", "present", "Present"],
-              ["Flushing / histamine-like episodes", "Suggestive and often paired with antihistamine response in the dataset.", "present", "Likely"],
-              ["Antihistamine sensitivity", "Helpful response can support the pattern, but non-response does not rule it out.", "conflicting", "Mixed"],
-              ["Formal allergy or mast-cell workup", "Usually absent in Reddit-derived evidence and missing here too.", "missing", "Missing"],
-              ["Specific trigger history", "Needs structured documentation to make the clinician conversation more useful.", "missing", "Needed"]
-            ],
-            questions: [
-              "Do my flare patterns suggest a histamine or mast-cell style overlap worth evaluating further?",
-              "Would structured symptom and trigger logging be useful before drawing conclusions?",
-              "How should antihistamine response be interpreted alongside orthostatic or PEM symptoms?",
-              "What alternative explanations for food-triggered flares should be considered?"
-            ],
-            drawerSummary: [
-              { big: "298", text: "similar records reference this pattern" },
-              { big: "Medium", text: "pattern support with overlap uncertainty" }
-            ],
-            drawerRows: [
-              ["Primary clue", "trigger-linked symptom flares"],
-              ["Overlap clue", "antihistamine / ketotifen response"],
-              ["Missing evidence", "formal workup and structured trigger log"],
-              ["Best next conversation", "mast-cell style symptoms and differential diagnosis"]
-            ]
-          }
-        },
-        mecfs: {
-          key: "mecfs",
-          name: "ME/CFS phenotype",
-          support: "Exploratory",
-          supportClass: "support-medium",
-          description: "Use carefully: this should present as a symptom-pattern phenotype until canonical mapping is corrected.",
-          count: "PEM-heavy cohort",
-          signalText: "Needs cleaner mapping",
-          list: [
-            "Signals: post-exertional malaise, crashes, reduced baseline, sensory overload",
-            "Common overlaps: Long COVID, POTS",
-            "Evidence lane: quotes describing crashes after activity and pacing limits",
-            "Clinician prompt: discuss PEM explicitly rather than relying on broad fatigue labels"
-          ],
-          workspace: {
-            subtitle: "selected pattern: ME/CFS-like phenotype",
-            why: "This pattern appears because PEM-style language and crash descriptions are common in similar patients. It should be shown as a phenotype or symptom-cluster view right now, because the notebook review found canonicalization problems that could overstate specific diagnosis labels.",
-            quotes: [
-              ["I could do one normal task and then lose the next two days to a crash.", "Pattern clue · PEM language"],
-              ["The fatigue wasn’t constant in the usual sense, it was more like a lowered ceiling that I kept crashing through.", "Pattern clue · reduced baseline"],
-              ["Pacing mattered more than any single treatment, which made me think this was more than just deconditioning.", "Pattern clue · pacing relevance"]
-            ],
-            clues: [
-              ["Post-exertional malaise", "One of the strongest phenotype clues in the whole explorer.", "present", "Present"],
-              ["Crash-and-recovery pattern", "Common in similar patient stories and often more informative than a generic fatigue label.", "present", "Likely"],
-              ["Orthostatic symptoms also present", "Suggests overlap rather than a clean single-phenotype story.", "conflicting", "Overlap"],
-              ["Clean canonical diagnosis mapping", "Currently not reliable enough for a hard diagnosis claim.", "missing", "Missing"],
-              ["Objective functional baseline tracking", "Would improve the clinician conversation but is often absent in the source data.", "missing", "Needed"]
-            ],
-            questions: [
-              "Do my symptoms fit a PEM-centered phenotype, and how is that different from ordinary fatigue?",
-              "How should overlapping dysautonomia symptoms change interpretation?",
-              "Would a pacing history help clarify whether this pattern is clinically meaningful?",
-              "What terminology would make this conversation more precise than simply saying I feel tired?"
-            ],
-            drawerSummary: [
-              { big: "PEM", text: "dominant clue driving this phenotype" },
-              { big: "Low", text: "label confidence until mapping is fixed" }
-            ],
-            drawerRows: [
-              ["Primary clue", "post-exertional malaise"],
-              ["Overlap clue", "orthostatic intolerance"],
-              ["Missing evidence", "clean canonical diagnosis mapping"],
-              ["Best next conversation", "PEM history, pacing, and phenotype framing"]
-            ]
-          }
-        }
-      };
-
       let currentMode = "treatment";
-      let selectedTreatment = "ldn";
-      let selectedDiagnosis = "pots";
-      function supportClass(label) {
-        return label.toLowerCase().includes("high") || label.toLowerCase().includes("strong")
-          ? "support-high"
-          : "support-medium";
-      }
 
       function sxInk(p) { return p >= 70 ? "#4f6654" : p >= 50 ? "#9b6a34" : "#a35442"; }
       function sxBand(p) { return p >= 70 ? "rgba(79,102,84,.45)" : p >= 50 ? "rgba(155,106,52,.40)" : "rgba(163,84,66,.38)"; }
@@ -1646,192 +1337,98 @@
         const orig = btn ? btn.textContent : "";
         if (btn) { btn.textContent = "Finding…"; btn.disabled = true; }
         try {
-          const res = await fetch("/api/treatment-evidence", {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(window.SX_PROFILE),
-          });
-          window.EVIDENCE = await res.json();
+          const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(window.SX_PROFILE) };
+          const [evRes, coRes] = await Promise.all([
+            fetch("/api/treatment-evidence", opts),
+            fetch("/api/comorbidity", opts),
+          ]);
+          window.EVIDENCE = await evRes.json();
+          window.COMORBIDITY = await coRes.json();
           const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
           set("sx-matched", (window.EVIDENCE.matched_patients || 0).toLocaleString());
           set("sx-quoteable", (window.EVIDENCE.quoteable || 0).toLocaleString());
           set("sx-condcount", conds.length);
+          const dx = document.getElementById("dx-summary");
+          if (dx) dx.innerHTML = `<strong>${(window.COMORBIDITY.cohort_size || 0).toLocaleString()}</strong> patients share your conditions · enrichment vs <strong>${(window.COMORBIDITY.population || 0).toLocaleString()}</strong> total`;
           renderTreatmentCards();
+          renderDiagnosisCards();
+          renderDrawer();
         } catch (e) {
           alert("Failed to load evidence: " + e);
         } finally { if (btn) { btn.textContent = orig; btn.disabled = false; } }
       }
 
+      function dxLift(l) { return l >= 2 ? "support-high" : l >= 1.5 ? "support-medium" : "warning"; }
+
       function renderDiagnosisCards() {
         const container = document.getElementById("diagnosis-cards");
-        container.innerHTML = Object.values(diagnosisData)
-          .map((item) => `
-            <article class="diagnosis-card ${selectedDiagnosis === item.key ? "selected" : ""}" data-diagnosis="${item.key}">
-              <div class="pill ${item.supportClass}" style="width: fit-content; margin-bottom: 10px;">${item.support}</div>
-              <h4>${item.name}</h4>
-              <p>${item.description}</p>
-              <div class="signal">
-                <span>${item.count}</span>
-                <span>${item.signalText}</span>
+        if (!window.COMORBIDITY) {
+          container.innerHTML = '<div class="subtle-card"><p>Select your conditions, then click <strong>Find Similar Patients</strong> to see which other conditions recur among patients like you.</p></div>';
+          return;
+        }
+        const co = window.COMORBIDITY;
+        if (!co.patterns.length) {
+          container.innerHTML = '<div class="subtle-card"><p>No enriched co-conditions cleared the reporting threshold for this cohort. Try selecting fewer or more common conditions.</p></div>';
+          return;
+        }
+        container.innerHTML = co.patterns
+          .map((p) => `
+            <article class="diagnosis-card">
+              <div class="pill ${dxLift(p.lift)}" style="width: fit-content; margin-bottom: 10px;">${p.lift}× enriched</div>
+              <h4>${p.condition}</h4>
+              <p><strong>${p.cohort_pct}%</strong> of patients like you also report this, vs <strong>${p.baseline_pct}%</strong> across all patients.</p>
+              <div class="sx-ci-track">
+                <div class="sx-ci-band" style="left:0;width:${Math.max(1, p.cohort_pct)}%;background:${sxBand(60)}"></div>
+                <div class="sx-ci-mark" style="left:${p.baseline_pct}%;background:var(--muted)" title="population baseline ${p.baseline_pct}%"></div>
               </div>
-              <div class="diag-list">
-                ${item.list.map((line) => `<span><strong>${line.split(":")[0]}:</strong>${line.includes(":") ? line.split(":").slice(1).join(":") : ""}</span>`).join("")}
+              <div class="sx-scale"><span>0%</span><span>▏ = baseline</span><span>100%</span></div>
+              <div class="signal">
+                <span>${p.cohort_count}</span>
+                <span>cohort patients reporting it</span>
               </div>
             </article>
           `)
           .join("");
-
-        container.querySelectorAll("[data-diagnosis]").forEach((card) => {
-          card.addEventListener("click", () => {
-            selectedDiagnosis = card.dataset.diagnosis;
-            renderDiagnosisCards();
-            renderDiagnosisWorkspace();
-            if (currentMode === "diagnosis") renderDrawer();
-          });
-        });
-      }
-
-      function renderDiagnosisWorkspace() {
-        const item = diagnosisData[selectedDiagnosis];
-        const evidence = document.getElementById("diagnosis-workspace-evidence");
-        const checklist = document.getElementById("diagnosis-workspace-checklist");
-        const clinician = document.getElementById("diagnosis-workspace-clinician");
-
-        evidence.innerHTML = `
-          <div class="section-head" style="margin-bottom: 0;">
-            <h3>Why This Diagnosis Appears</h3>
-            <span>${item.workspace.subtitle}</span>
-          </div>
-          <div class="drawer-tabs">
-            <span class="drawer-tab active">Evidence</span>
-            <span class="drawer-tab">Missing clues</span>
-            <span class="drawer-tab">Questions</span>
-          </div>
-          <div class="why-box">${item.workspace.why}</div>
-          <div class="stack">
-            ${item.workspace.quotes
-              .map(
-                ([text, meta]) => `
-                <div class="quote">
-                  <p>${text}</p>
-                  <div class="meta">${meta}</div>
-                </div>
-              `
-              )
-              .join("")}
-          </div>
-        `;
-
-        checklist.innerHTML = `
-          <div class="section-head" style="margin-bottom: 0;">
-            <h3>Symptom Clues</h3>
-            <span>what fits vs what is missing</span>
-          </div>
-          <div class="clue-grid">
-            ${item.workspace.clues
-              .map(
-                ([title, text, badgeClass, badgeText]) => `
-                <div class="clue-row">
-                  <div>
-                    <strong>${title}</strong>
-                    <p>${text}</p>
-                  </div>
-                  <span class="badge ${badgeClass}">${badgeText}</span>
-                </div>
-              `
-              )
-              .join("")}
-          </div>
-        `;
-
-        clinician.innerHTML = `
-          <div class="section-head" style="margin-bottom: 0;">
-            <h3>Questions to Discuss With Clinician</h3>
-            <span>conversation prep, not advice</span>
-          </div>
-          <div class="clinician-list">
-            ${item.workspace.questions.map((q, i) => `<span><strong>${i + 1}.</strong> ${q}</span>`).join("")}
-          </div>
-          <div class="callout">
-            Diagnosis mode should help users organize observations and recognize recurring patterns in similar
-            patient stories. It should never imply that a surfaced diagnosis is confirmed, complete, or exclusive.
-          </div>
-        `;
       }
 
       function renderDrawer() {
         const drawer = document.getElementById("drawer-content");
+        const big = 'style="display:block;font-size:24px;color:var(--text);margin-bottom:6px;"';
+        const prof = (window.SX_PROFILE && window.SX_PROFILE.conditions) || [];
+        const profTxt = prof.length ? prof.join(", ") : "none selected yet";
 
         if (currentMode === "treatment") {
-          const item = treatmentData[selectedTreatment];
+          const ev = window.EVIDENCE;
           drawer.innerHTML = `
-            <div class="section-head">
-              <h3>${item.drawerTitle}</h3>
-              <span>${item.drawerSubtitle}</span>
-            </div>
+            <div class="section-head"><h3>How to read this</h3><span>treatment evidence</span></div>
             <div class="summary-grid">
-              ${item.drawerSummary
-                .map(
-                  (s) => `
-                <div class="subtle-card">
-                  <p><strong style="display:block;font-size:24px;color:var(--text);margin-bottom:6px;">${s.big}</strong>${s.text}</p>
-                </div>
-              `
-                )
-                .join("")}
+              <div class="subtle-card"><p><strong ${big}>${ev ? ev.matched_patients.toLocaleString() : "—"}</strong>patients share your conditions (${profTxt}).</p></div>
+              <div class="subtle-card"><p><strong ${big}>${ev ? ev.quoteable.toLocaleString() : "—"}</strong>of them left usable treatment reports.</p></div>
             </div>
-            <div class="stack">
-              ${item.quotes
-                .map(
-                  (q) => `
-                <div class="quote">
-                  <p>${q.text}</p>
-                  <div class="meta">${q.meta}</div>
-                </div>
-              `
-                )
-                .join("")}
+            <div class="why-box" style="margin: 14px 0;">
+              Each card’s <strong>%</strong> is a logistic-model estimate of the chance a patient like you reports a
+              <strong>positive</strong> experience with that drug class. The bar is its 95% confidence interval —
+              wider means less certain (smaller n). “Drivers” are the conditions in your profile that moved the estimate,
+              and quotes are real reports from your cohort.
             </div>
-            <div style="height: 18px;"></div>
-            <div class="section-head" style="margin-bottom: 10px;">
-              <h3 style="font-size: 20px;">${item.comparisonTitle}</h3>
-              <span>${item.comparisonSubtitle}</span>
-            </div>
-            <div class="mini-table">
-              ${item.comparisonRows.map(([a, b]) => `<div class="mini-row"><span>${a}</span><span>${b}</span></div>`).join("")}
-            </div>
+            <div class="callout">${ev ? ev.disclaimer : "Decision support from lived-experience reports — not medical advice."}</div>
           `;
           return;
         }
 
-        const item = diagnosisData[selectedDiagnosis];
+        const co = window.COMORBIDITY;
         drawer.innerHTML = `
-          <div class="section-head">
-            <h3>Diagnosis Workup Drawer</h3>
-            <span>${item.workspace.subtitle}</span>
-          </div>
+          <div class="section-head"><h3>How to read this</h3><span>diagnosis evidence</span></div>
           <div class="summary-grid">
-            ${item.workspace.drawerSummary
-              .map(
-                (s) => `
-              <div class="subtle-card">
-                <p><strong style="display:block;font-size:24px;color:var(--text);margin-bottom:6px;">${s.big}</strong>${s.text}</p>
-              </div>
-            `
-              )
-              .join("")}
+            <div class="subtle-card"><p><strong ${big}>${co ? co.cohort_size.toLocaleString() : "—"}</strong>patients share your conditions (${profTxt}).</p></div>
+            <div class="subtle-card"><p><strong ${big}>${co ? co.population.toLocaleString() : "—"}</strong>patients in the corpus — the baseline.</p></div>
           </div>
-          <div class="drawer-tabs" style="margin-bottom: 14px;">
-            <span class="drawer-tab active">Why it appears</span>
-            <span class="drawer-tab">Missing clues</span>
+          <div class="why-box" style="margin: 14px 0;">
+            <strong>Lift</strong> is how much more common a condition is in your cohort than in everyone:
+            2× means twice as common among patients like you. The bar shows your cohort’s rate; the tick (▏) marks the
+            population baseline. Only conditions reported by at least 5 cohort patients are shown.
           </div>
-          <div class="why-box" style="margin-bottom: 14px;">
-            The diagnosis drawer explains <strong>why a pattern surfaced</strong>, which clues are carrying the match,
-            and what evidence is still absent. This keeps diagnosis mode useful for exploration without presenting it
-            as a diagnostic engine.
-          </div>
-          <div class="mini-table">
-            ${item.workspace.drawerRows.map(([a, b]) => `<div class="mini-row"><span>${a}</span><span>${b}</span></div>`).join("")}
-          </div>
+          <div class="callout">${co ? co.disclaimer : "Co-occurrence patterns from self-reported data — not a diagnosis."}</div>
         `;
       }
 
@@ -1856,7 +1453,6 @@
 
       renderTreatmentCards();
       renderDiagnosisCards();
-      renderDiagnosisWorkspace();
       renderDrawer();
 
       const sxFindBtn = document.getElementById("sx-find");

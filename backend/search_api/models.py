@@ -200,6 +200,27 @@ class TreatmentEvidenceResponse(BaseModel):
     )
 
 
+class ComorbidityPattern(BaseModel):
+    condition: str                # canonical co-condition label
+    cohort_count: int             # patients in the profile cohort who also report it
+    cohort_pct: int               # % of the cohort
+    baseline_pct: int             # % of the whole patient population
+    lift: float                   # cohort_pct / baseline_pct (>1 = enriched in patients like you)
+
+
+class ComorbidityResponse(BaseModel):
+    """Diagnosis Evidence: conditions enriched among patients who share the profile."""
+    profile: list[str]
+    cohort_size: int
+    population: int
+    patterns: list[ComorbidityPattern] = []
+    disclaimer: str = (
+        "Co-occurrence patterns from self-reported data — NOT a diagnosis. Enrichment means a "
+        "condition is more common among patients like you than in the population; raise it with "
+        "a clinician, do not self-diagnose."
+    )
+
+
 class ExplainRequest(BaseModel):
     category: str = Field(min_length=1, max_length=80)
     conditions: list[str] = Field(default_factory=list, max_length=20)
