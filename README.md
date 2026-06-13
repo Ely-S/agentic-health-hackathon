@@ -39,16 +39,21 @@ advice.** The underlying signal is what patients *said* helped them, not clinica
 
 To be explicit for judging — what this hackathon contributes vs. what it stands on:
 
-| | Built **before** the hackathon (PatientPunk) | Built **here** (this hackathon) |
+| | Prior work — **PatientPunk** (the foundation) | **This hackathon** |
 |---|---|---|
-| Data collection | Scraping r/covidlonghaulers (and other patient subreddits) via the Reddit archive | — (we reuse the corpus) |
-| Structured dataset | The extraction pipeline → `patientpunk.db` (per-patient variables + per-drug sentiment + demographics) | — (we consume it) |
-| Clustering / normalization toolchain | The variable-extraction, normalization, and clustering tooling | — |
-| **The application** | — | **The agentic "patients-like-me → treatment ranking" app, the LLM intake/segmentation, the similarity/retrieval layer, and the diagnosis/cluster/comorbidity visualizations** |
+| Data collection (r/covidlonghaulers via the public Reddit archive) | ✓ | — |
+| Extraction pipeline → `patientpunk.db` (per-patient variables, per-drug sentiment, demographics) | ✓ | — |
+| The agentic app (intake → similar patients → ranked treatments) | — | ✓ *(in progress)* |
+| Patient similarity / clustering | — | ✓ — **in development; no finalized algorithm yet** |
+| Exploratory analysis (comorbidity structure, data cleaning/encoding, codebook, cluster-readiness) | — | ✓ |
+| Visualizations (diagnosis heatmap, clusters, overlapping conditions) | — | ✓ |
 
-The dataset and pipeline come from the **PatientPunk** project
-(<https://github.com/Ely-S/PatientPunk>). The contribution *here* is the agentic
-product on top of it.
+The **dataset and the pipeline that produced it** are prior **PatientPunk** work
+(<https://github.com/Ely-S/PatientPunk>) — that's the foundation we build on. **Everything we
+do *with* the data for this hackathon** — the patient-similarity / clustering approach, the
+exploratory comorbidity and cluster analysis, the data cleaning / encoding, and the app — is
+created **here**. The clustering/similarity layer is still being developed: **we do not yet
+have a finalized algorithm**, and the exploratory analyses were produced at this hackathon.
 
 ---
 
@@ -65,6 +70,26 @@ A 2-month slice of r/covidlonghaulers, structured per patient. Full details in
 - Built from **2,164 posts + 33,312 comments**, all originally **public** on Reddit.
 - Conditions, treatments, symptoms, functional status, and (sparse, self-reported)
   demographics.
+
+---
+
+## How the data was gathered
+
+All extraction ran on **DeepSeek-V3.2 (open-weights) via OpenRouter at temperature 0** —
+chosen over frontier models after a head-to-head on this exact task showed it **matched their
+coverage of the nuanced, inferential fields at ~1/13 the cost** (and faster, full precision),
+so the whole corpus is cheap and reproducible to (re)process. Key decisions:
+
+- **Patient = author, extracted once** — each author's posts *and* comments are merged into
+  one document and extracted once per patient (not per post); comments are attributed to their
+  *own* author, so commenters are patients too.
+- **Regex first, LLM for the gaps**, across a **~95-field "promoted" schema** — a curated base
+  set plus fields *discovered inductively* in an earlier pass and promoted to first-class.
+- **Drug sentiment in three stages** — extract drug mentions → canonicalize synonyms
+  ("low dose naltrexone" → LDN) → classify each *(post, drug)* pair's sentiment. This is the
+  treatment-ranking signal.
+
+Full detail and the quality caveats are in [`docs/DATASET.md`](docs/DATASET.md).
 
 ---
 

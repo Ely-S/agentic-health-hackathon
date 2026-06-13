@@ -91,3 +91,28 @@ the visualizations in case live rendering breaks.
   before similarity/clustering will be clean. Drug-sentiment is the strongest, cleanest part
   of the dataset (LDN/antihistamines/magnesium/etc. with pos/neg splits). Next agent: pick
   up the similarity layer; mind the verbosity confound.
+- **2026-06-13 — Claude (Opus, w/ Shaun), re: Eli's agent flag on condition canonicalization.**
+  Eli's agent flagged that `me_cfs` / `multiple_sclerosis` / `eds` results might be invalid
+  (substring "me" over-matching, words-ending-"ms" over-matching, eds undercounted). **Audited
+  against the real data:**
+  - **`me_cfs` — no false positives.** Only `me/cfs` (390) + `chronic fatigue` (4) map to it.
+    The substring "me" is *not* matched.
+  - **`ms` — no false positives.** Only the literal `ms` (55) maps; nothing ending in "ms".
+  - **`eds` — canonicalization is fine** (captures all ~85 EDS-looking values in the
+    `conditions` field, none missed) — **but eds IS undercounted for a *different* reason:
+    the signal is split across fields.** 63 patients carry EDS/hypermobility in
+    `connective_tissue_symptoms` (`cci`, `hypermobility`, `heds`, `ehlers danlos`…), and **33
+    of them never appear in `conditions`.** True EDS ≈ **119** (conditions ∪ connective_tissue)
+    vs **86** from `conditions` alone (~28% low).
+
+  **Why the substring risk doesn't bite our code:** the modeling mapper
+  (`scripts/clean_encode.py`) uses **exact match** (no substring at all); the exploratory
+  heatmap mapper (PatientPunk `normalize.py`) uses **guarded** substring — surface forms must
+  be **length ≥ 4 with word boundaries**, so 2-letter tokens ("me","ms") can only match
+  exactly, never as substrings. Eli's instinct (short-token substring matching is a footgun)
+  is the right general rule — it just isn't present here.
+
+  **TODO for condition-level prevalence/clustering:** aggregate split conditions across related
+  fields (EDS ← `conditions` + `connective_tissue_symptoms`; likely also MCAS, dysautonomia,
+  SFN). The codebook's per-field counts (EDS 81) are correct *for the conditions field* but
+  understate true prevalence — account for this when the app computes condition prevalence.

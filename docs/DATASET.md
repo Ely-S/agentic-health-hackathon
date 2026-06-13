@@ -24,8 +24,15 @@ comes from, how it was collected and processed, what it contains, and how to obt
 ## How it was processed (raw text → structured data)
 
 The PatientPunk pipeline turns free-text posts into a structured, per-patient database.
-All language-model steps for this dataset were run on an open model (DeepSeek) at
-temperature 0.
+
+**Model.** Every language-model step ran on **DeepSeek-V3.2 (an open-weights model) via
+OpenRouter, at temperature 0** (deterministic). DeepSeek was chosen after a measured
+head-to-head against frontier models (Claude and others) on this exact extraction task: it
+**matched their coverage of the nuanced, inferential fields at ~1/13 the cost**, ran faster,
+and at full precision — so the entire corpus can be processed cheaply and reproducibly, with
+no frontier-only model required to extend it.
+
+The steps:
 
 1. **Pseudonymize** — every Reddit username is replaced by a SHA-256 hash (`author_hash`)
    at ingest; usernames are not retained downstream. (See [PRIVACY.md](PRIVACY.md) for the
@@ -42,6 +49,24 @@ temperature 0.
 5. **Demographics** — a deductive LLM pass extracts self-stated age / sex / location where
    present (these are sparse — most users don't state them).
 6. **Assembly** — everything is fused into one SQLite database (`patientpunk.db`).
+
+### Key decisions (and why)
+
+- **Patient = author, extracted once.** We merge each author's posts *and* comments into one
+  document and extract once per patient (not per post) — this matches the analysis unit (a
+  patient), cuts LLM cost several-fold, and gives the model the patient's full context.
+- **Regex first, LLM for the gaps.** Phase 1 uses deterministic regex for well-structured
+  patterns (free, reliable); Phase 2 calls the LLM only to fill the *empty* fields across the
+  ~95-field schema — cheap where rules suffice, the model only where judgment is needed.
+- **A "promoted" schema.** The ~95 fields are a curated base set **plus fields discovered
+  inductively** in an earlier pass and promoted to first-class — so the data captures both
+  designed and emergent variables.
+- **Drug sentiment in three stages.** (1) extract drug mentions per post; (2) canonicalize
+  synonyms across all mentions ("low dose naltrexone" → "ldn"); (3) a cheap prefilter ("does
+  this post express a personal experience with the drug?") gates a sentiment classifier
+  (positive / negative / mixed) on each surviving *(post, drug)* pair.
+- **A 2-month slice.** We use the most recent 60 days of a larger 6-month corpus as a
+  tractable, current sample.
 
 > Quality note: this is **observational, self-reported** data extracted by automated
 > tools. ~1–2% of records fall back to rule-based extraction on parse failures, and a
