@@ -77,8 +77,20 @@ dropped; `symptom_trajectory` excluded as outcome-adjacent). Robust (p<0.05): **
 (OR~5)**, supplement→ME/CFS failure, autonomic→POTS success / MCAS+PEM failure, severe-status→failure
 broadly. neuro-psych→EDS attenuated per-category (underpowered unpooled; the pooled model showed it).
 
-**Next:** the similarity / "patients-like-me" app layer; optionally regenerate the pooled +
-heterogeneity descriptives on the re-run 5-class data (they were on the old sentiment).
+**Pooled model regenerated on re-run data** (`scripts/pooled_rerun.py` →
+`cleaned_v2/treatment_pooled_report.txt`): metabolic→fibro/SFN/dysautonomia better, autonomic→POTS
+better/MCAS worse, supplement→ME/CFS worse, LDN→MCAS worse; **neuro-psych→EDS no longer significant**
+(attenuated on the cleaned data — was the headline on old sentiment).
+
+**Similarity / "patients-like-me" engine — BUILT** (`scripts/similarity.py`): cosine kNN in the
+controlled space → similarity-weighted treatment ranking from the re-run sentiment, with a
+drug-class view + individual-drug view + population-vs-neighbour personalization (and a CAUTION
+list). Demo profiles are clinically coherent: MCAS → ketotifen/cromolyn; POTS →
+pyridostigmine/clonidine/beta-blockers; ME/CFS → LDN; metabolic top for dysautonomia-spectrum but
+worst for hypermobility. **This is the product core.**
+
+**Next:** wire `similarity.py` into the app/demo (intake → neighbours → ranked treatments + the
+contraindication flags); the data + models are all on the re-run 5-class basis now.
 
 ## Hard rules / conventions (don't break these)
 1. **NO patient data in this repo — ever.** No `.db`, no raw `.json`/`.csv` of patient text
