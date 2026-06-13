@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Subtype Explorer Prototype</title>
+    <style>
+      :root {
+        --bg: #f5f1e8;
+        --bg-strong: #fffaf2;
+        --panel: rgba(255, 252, 246, 0.84);
+        --line: rgba(34, 39, 37, 0.1);
+        --text: #1f2422;
+        --muted: #66706a;
+        --moss: #4f6654;
+        --moss-soft: #d9e3d8;
+        --amber: #9b6a34;
+        --amber-soft: #f1e4cf;
+        --rose: #9b5f51;
+        --rose-soft: #f4d9d2;
+        --stone: #ece6d7;
+        --shadow: 0 22px 60px rgba(42, 48, 45, 0.08);
+        --radius-xl: 26px;
+        --radius-lg: 18px;
+        --radius-md: 14px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(79, 102, 84, 0.1), transparent 28%),
+          radial-gradient(circle at bottom right, rgba(155, 106, 52, 0.09), transparent 24%),
+          linear-gradient(180deg, #f8f4ec 0%, var(--bg) 100%);
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.2;
+        background-image:
+          linear-gradient(rgba(31, 36, 34, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(31, 36, 34, 0.03) 1px, transparent 1px);
+        background-size: 32px 32px;
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.72), transparent 92%);
+      }
+
+      .shell {
+        max-width: 1560px;
+        margin: 0 auto;
+        padding: 28px;
+      }
+
+      .banner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 18px;
+        border: 1px solid rgba(155, 106, 52, 0.18);
+        border-radius: 999px;
+        background: rgba(255, 248, 238, 0.9);
+        color: #6d5636;
+        font-size: 13px;
+        letter-spacing: 0.02em;
+        box-shadow: 0 10px 30px rgba(125, 92, 53, 0.06);
+      }
+
+      .banner strong {
+        font-weight: 700;
+      }
+
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 24px;
+        margin: 28px 0 24px;
+      }
+
+      .hero h1 {
+        margin: 0;
+        max-width: 780px;
+        font-family: "Iowan Old Style", "Palatino Linotype", serif;
+        font-size: clamp(42px, 7vw, 72px);
+        font-weight: 600;
+        line-height: 0.95;
+        letter-spacing: -0.03em;
+      }
+
+      .hero p {
+        max-width: 640px;
+        margin: 14px 0 0;
+        color: var(--muted);
+        font-size: 17px;
+        line-height: 1.65;
+      }
+
+      .hero-meta {
+        min-width: 280px;
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: rgba(255, 255, 255, 0.46);
+        box-shadow: var(--shadow);
+      }
+
+      .eyebrow {
+        display: block;
+        margin-bottom: 10px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .hero-meta .big {
+        display: block;
+        font-size: 36px;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+      }
+
+      .hero-meta .small {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .app-grid {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr) 380px;
+        gap: 20px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        background: var(--panel);
+        backdrop-filter: blur(16px);
+        box-shadow: var(--shadow);
+      }
+
+      .sidebar,
+      .main,
+      .drawer {
+        padding: 22px;
+      }
+
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .section-head h2,
+      .section-head h3,
+      .section-head h4 {
+        margin: 0;
+        font-family: "Iowan Old Style", "Palatino Linotype", serif;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .section-head h2 {
+        font-size: 30px;
+      }
+
+      .section-head h3 {
+        font-size: 24px;
+      }
+
+      .section-head h4 {
+        font-size: 18px;
+      }
+
+      .section-head span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 14px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 12px;
+        border: 1px solid rgba(79, 102, 84, 0.16);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: #334038;
+        font-size: 13px;
+        cursor: pointer;
+        transition: 160ms ease;
+      }
+
+      .chip.active,
+      .chip:hover {
+        background: var(--moss);
+        border-color: var(--moss);
+        color: #f5f4ef;
+      }
+
+      .select {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 15px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--text);
+        font-size: 14px;
+      }
+
+      .subtle-card {
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: rgba(255, 255, 255, 0.56);
+      }
+
+      .subtle-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .button-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
+      }
+
+      .button {
+        padding: 13px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.82);
+        color: var(--text);
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      .button.primary {
+        background: var(--moss);
+        border-color: var(--moss);
+        color: #fbfbf7;
+      }
+
+      .tabs {
+        display: inline-flex;
+        gap: 8px;
+        padding: 6px;
+        margin-bottom: 18px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .tab {
+        padding: 10px 16px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+      }
+
+      .tab.active {
+        background: var(--moss);
+        color: #f8f7f2;
+      }
+
+      .mode-panel {
+        display: none;
+      }
+
+      .mode-panel.active {
+        display: block;
+      }
+
+      .toolbar,
+      .diagnosis-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+      }
+
+      .toolbar .left,
+      .toolbar .right,
+      .diagnosis-toolbar .left,
+      .diagnosis-toolbar .right {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+
+      .pill.support-high {
+        background: var(--moss-soft);
+        color: #35513b;
+      }
+
+      .pill.support-medium {
+        background: var(--stone);
+        color: #715931;
+      }
+
+      .pill.warning {
+        background: var(--amber-soft);
+        color: var(--amber);
+      }
+
+      .pill.response {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(34, 39, 37, 0.08);
+        color: #415148;
+      }
+
+      .cohort-card,
+      .summary-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .cohort-card {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-bottom: 18px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(247, 244, 237, 0.85));
+      }
+
+      .metric strong {
+        display: block;
+        margin-bottom: 3px;
+        font-size: 28px;
+        letter-spacing: -0.04em;
+      }
+
+      .metric span {
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .cards,
+      .diagnosis-grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .diagnosis-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .treatment-card,
+      .diagnosis-card,
+      .workspace-card {
+        padding: 18px;
+        border: 1px solid rgba(34, 39, 37, 0.08);
+        border-radius: 22px;
+        background: var(--bg-strong);
+      }
+
+      .treatment-card,
+      .diagnosis-card {
+        cursor: pointer;
+        transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      }
+
+      .treatment-card:hover,
+      .diagnosis-card:hover,
+      .treatment-card.selected,
+      .diagnosis-card.selected {
+        transform: translateY(-2px);
+        border-color: rgba(79, 102, 84, 0.3);
+        box-shadow: 0 16px 35px rgba(42, 48, 45, 0.08);
+      }
+
+      .treatment-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .treatment-title {
+        display: grid;
+        gap: 6px;
+      }
+
+      .treatment-title h4,
+      .diagnosis-card h4 {
+        margin: 0;
+        font-size: 24px;
+        font-family: "Iowan Old Style", "Palatino Linotype", serif;
+        font-weight: 600;
+      }
+
+      .treatment-title p,
+      .diagnosis-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .score {
+        text-align: right;
+      }
+
+      .score strong {
+        display: block;
+        font-size: 40px;
+        line-height: 1;
+        letter-spacing: -0.06em;
+      }
+
+      .score span {
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin: 14px 0 12px;
+      }
+
+      .stat {
+        padding: 12px;
+        border-radius: 16px;
+        background: #f5f0e7;
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 20px;
+        letter-spacing: -0.04em;
+      }
+
+      .stat span {
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .bar {
+        display: flex;
+        overflow: hidden;
+        height: 8px;
+        border-radius: 999px;
+        background: #ece7db;
+      }
+
+      .bar .pos {
+        background: #78937c;
+      }
+
+      .bar .neg {
+        background: #b9826a;
+      }
+
+      .bar .mix {
+        background: #c7b38f;
+      }
+
+      .response-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .card-foot {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        margin-top: 14px;
+      }
+
+      .card-foot p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .ghost {
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: transparent;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .diagnosis-summary,
+      .diagnosis-workspace {
+        display: grid;
+        gap: 14px;
+      }
+
+      .diagnosis-summary {
+        grid-template-columns: 1.15fr 0.85fr;
+        margin-bottom: 18px;
+      }
+
+      .signal-list,
+      .mini-table,
+      .clinician-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .signal-item,
+      .mini-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--line);
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .signal-item:last-child,
+      .mini-row:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .signal-item strong,
+      .diag-list strong,
+      .mini-row strong,
+      .clinician-list strong {
+        color: var(--text);
+      }
+
+      .diagnosis-card .signal {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .diag-list {
+        display: grid;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .diagnosis-workspace {
+        grid-template-columns: 1.1fr 0.9fr;
+      }
+
+      .workspace-card {
+        display: grid;
+        gap: 14px;
+      }
+
+      .drawer-tabs {
+        display: inline-flex;
+        gap: 8px;
+        padding: 5px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .drawer-tab {
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .drawer-tab.active {
+        background: var(--stone);
+        color: #5f4a2c;
+      }
+
+      .why-box,
+      .callout {
+        padding: 14px;
+        border-radius: 16px;
+        font-size: 14px;
+        line-height: 1.65;
+      }
+
+      .why-box {
+        background: #f6f1e8;
+        color: var(--muted);
+      }
+
+      .callout {
+        background: rgba(241, 228, 207, 0.65);
+        color: #735a34;
+      }
+
+      .quote {
+        padding: 16px;
+        border-left: 3px solid var(--moss);
+        border-radius: 0 16px 16px 0;
+        background: rgba(255, 255, 255, 0.74);
+      }
+
+      .quote p {
+        margin: 0 0 10px;
+        font-size: 14px;
+        line-height: 1.65;
+      }
+
+      .quote .meta {
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .clue-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .clue-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: start;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .clue-row:last-child {
+        border-bottom: 0;
+      }
+
+      .clue-row strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 14px;
+      }
+
+      .clue-row p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .badge {
+        padding: 7px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .badge.present {
+        background: var(--moss-soft);
+        color: #35513b;
+      }
+
+      .badge.missing {
+        background: #efe8dc;
+        color: #7a6240;
+      }
+
+      .badge.conflicting {
+        background: var(--rose-soft);
+        color: var(--rose);
+      }
+
+      .drawer .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-bottom: 18px;
+      }
+
+      .text-input,
+      .select-input,
+      .query-weight-select {
+        width: 100%;
+        padding: 14px 15px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.86);
+        color: var(--text);
+        font: inherit;
+      }
+
+      .text-input::placeholder {
+        color: #8f9893;
+      }
+
+      .keyword-top,
+      .keyword-results-grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .keyword-top {
+        grid-template-columns: 1.15fr 0.85fr;
+        margin-bottom: 18px;
+      }
+
+      .keyword-results-grid {
+        grid-template-columns: 1.05fr 0.95fr;
+      }
+
+      .keyword-compose {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 160px auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .keyword-preset-row,
+      .keyword-query-list,
+      .keyword-summary-grid,
+      .keyword-treatment-list,
+      .keyword-post-list,
+      .keyword-step-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .keyword-preset-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .keyword-preset,
+      .keyword-term-card,
+      .keyword-step,
+      .keyword-summary-card,
+      .keyword-treatment-row,
+      .keyword-post-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.68);
+      }
+
+      .keyword-preset {
+        padding: 12px 14px;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .keyword-preset span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .keyword-term-card,
+      .keyword-summary-card,
+      .keyword-step,
+      .keyword-treatment-row,
+      .keyword-post-card {
+        padding: 14px 16px;
+      }
+
+      .keyword-term-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 140px auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .keyword-term-main {
+        display: grid;
+        gap: 4px;
+      }
+
+      .keyword-term-main strong,
+      .keyword-treatment-row strong,
+      .keyword-post-card strong {
+        font-size: 15px;
+      }
+
+      .keyword-term-main span,
+      .keyword-treatment-row p,
+      .keyword-post-card p,
+      .keyword-empty p,
+      .keyword-db-status,
+      .keyword-step-copy,
+      .keyword-summary-card span {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .keyword-mini-button {
+        padding: 10px 12px;
+        border: 1px solid rgba(34, 39, 37, 0.1);
+        border-radius: 12px;
+        background: transparent;
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .keyword-db-status {
+        min-height: 20px;
+      }
+
+      .keyword-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .keyword-summary-card strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 28px;
+        letter-spacing: -0.04em;
+      }
+
+      .keyword-step {
+        display: grid;
+        gap: 10px;
+      }
+
+      .keyword-step-head,
+      .keyword-treatment-head,
+      .keyword-post-head,
+      .keyword-post-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 12px;
+      }
+
+      .keyword-step-title {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .weight-badge {
+        padding: 6px 9px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .weight-badge.high {
+        background: var(--moss-soft);
+        color: #35513b;
+      }
+
+      .weight-badge.medium {
+        background: var(--amber-soft);
+        color: var(--amber);
+      }
+
+      .weight-badge.low {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(34, 39, 37, 0.08);
+        color: #4e5d55;
+      }
+
+      .keyword-step-bars {
+        display: grid;
+        gap: 8px;
+      }
+
+      .keyword-bar-label {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .keyword-bar-track {
+        overflow: hidden;
+        height: 10px;
+        border-radius: 999px;
+        background: #ece7db;
+      }
+
+      .keyword-bar-fill {
+        height: 100%;
+        border-radius: 999px;
+      }
+
+      .keyword-bar-fill.any {
+        background: linear-gradient(90deg, #78937c, #95ad99);
+      }
+
+      .keyword-bar-fill.all {
+        background: linear-gradient(90deg, #9b6a34, #cca26b);
+      }
+
+      .keyword-treatment-row,
+      .keyword-post-card {
+        display: grid;
+        gap: 10px;
+      }
+
+      .keyword-treatment-score {
+        text-align: right;
+      }
+
+      .keyword-treatment-score strong {
+        display: block;
+        font-size: 30px;
+        letter-spacing: -0.05em;
+      }
+
+      .keyword-treatment-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .keyword-post-card {
+        cursor: pointer;
+        transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      }
+
+      .keyword-post-card:hover,
+      .keyword-post-card.selected {
+        transform: translateY(-2px);
+        border-color: rgba(79, 102, 84, 0.3);
+        box-shadow: 0 16px 35px rgba(42, 48, 45, 0.08);
+      }
+
+      .keyword-post-card h4 {
+        margin: 0;
+        font-size: 20px;
+        font-family: "Iowan Old Style", "Palatino Linotype", serif;
+        font-weight: 600;
+      }
+
+      .keyword-post-card p,
+      .keyword-treatment-row p {
+        margin: 0;
+      }
+
+      .keyword-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .keyword-empty {
+        padding: 28px 18px;
+        border: 1px dashed rgba(34, 39, 37, 0.18);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.42);
+      }
+
+      .keyword-upload {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .keyword-upload input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (max-width: 1220px) {
+        .hero {
+          flex-direction: column;
+          align-items: start;
+        }
+
+        .app-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .cohort-card,
+        .stats-row,
+        .diagnosis-grid,
+        .drawer .summary-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .diagnosis-summary,
+        .diagnosis-workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .keyword-top,
+        .keyword-results-grid,
+        .keyword-preset-row,
+        .keyword-summary-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 820px) {
+        .keyword-compose,
+        .keyword-term-card {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="banner">
+        <span><strong>Self-reported, AI-extracted patient experience.</strong> Not medical advice.</span>
+        <span>Always inspect quotes, denominators, support tier, and what evidence is missing.</span>
+      </div>
+
+      <section class="hero">
+        <div>
+          <h1>Subtype Explorer for treatment evidence and diagnosis patterns.</h1>
+          <p>
+            An interactive prototype for moving between two questions: what similar patients reported
+            trying, and which diagnoses or phenotypes keep appearing in patients with similar symptoms.
+          </p>
+        </div>
+        <aside class="hero-meta">
+          <span class="eyebrow">Current Cohort</span>
+          <span class="big">150 matched patients</span>
+          <span class="small">Median quality tier: High · 118 quoteable treatment posts · diagnosis mode stays suggestive, not diagnostic</span>
+        </aside>
+      </section>
+
+      <section class="app-grid">
+        <aside class="panel sidebar">
+          <div class="section-head">
+            <h3>Patient Profile</h3>
+            <span>guided intake</span>
+          </div>
+
+          <div class="stack">
+            <div class="field">
+              <label>Conditions</label>
+              <div class="chips">
+                <span class="chip active">Long COVID</span>
+                <span class="chip active">POTS</span>
+                <span class="chip active">MCAS</span>
+                <span class="chip">PEM</span>
+                <span class="chip">ME/CFS</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Primary symptoms</label>
+              <div class="chips">
+                <span class="chip active">Brain fog</span>
+                <span class="chip active">Fatigue / PEM</span>
+                <span class="chip active">Orthostatic intolerance</span>
+                <span class="chip">Histamine flares</span>
+                <span class="chip">Sleep disruption</span>
+                <span class="chip">Pain</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Functional status</label>
+              <div class="select"><span>Housebound</span><span>▾</span></div>
+            </div>
+
+            <div class="field">
+              <label>Symptom trajectory</label>
+              <div class="select"><span>Relapsing</span><span>▾</span></div>
+            </div>
+
+            <div class="field">
+              <label>Onset trigger</label>
+              <div class="select"><span>COVID</span><span>▾</span></div>
+            </div>
+
+            <div class="field">
+              <label>Duration</label>
+              <div class="select"><span>2+ years</span><span>▾</span></div>
+            </div>
+
+            <div class="field">
+              <label>Treatments already tried</label>
+              <div class="chips">
+                <span class="chip">Famotidine</span>
+                <span class="chip">Cetirizine</span>
+                <span class="chip">Ivabradine</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Prior treatment responses</label>
+              <div class="stack">
+                <div class="select"><span>Famotidine · partial benefit</span><span>▾</span></div>
+                <div class="select"><span>Cetirizine · no clear effect</span><span>▾</span></div>
+                <div class="select"><span>Ivabradine · worsened symptoms</span><span>▾</span></div>
+              </div>
+            </div>
+
+            <div class="subtle-card">
+              <p>
+                Matching prioritizes canonical condition overlap, symptom-domain overlap, then severity,
+                trajectory, onset, duration, and prior treatment response patterns. Diagnosis mode also
+                highlights missing evidence instead of pretending every pattern is complete.
+              </p>
+            </div>
+
+            <div class="button-row">
+              <button class="button primary">Find Similar Patients</button>
+              <button class="button">Load Example</button>
+            </div>
+          </div>
+        </aside>
+
+        <main class="panel main">
+          <div class="tabs">
+            <button class="tab active" data-mode="treatment">Treatment Evidence</button>
+            <button class="tab" data-mode="diagnosis">Diagnosis Evidence</button>
+            <a class="tab" href="weighted_keyword_explorer.html" style="display:inline-flex;align-items:center;text-decoration:none;">Weighted Keyword Explorer ↗</a>
+          </div>
+
+          <section id="treatment-mode" class="mode-panel active">
+            <div class="section-head">
+              <h2>Treatment Evidence</h2>
+              <span>ranked by support tier, weighted signal, and unique-patient count</span>
+            </div>
+
+            <div class="toolbar">
+              <div class="left">
+                <span class="pill support-high">Support Tier: High+</span>
+                <span class="pill warning">Exclude already tried</span>
+                <div class="select" style="min-width: 240px; padding: 10px 12px;">
+                  <span>Target symptom: brain fog</span>
+                  <span>▾</span>
+                </div>
+              </div>
+              <div class="right">
+                <span class="pill support-medium">POTS + MCAS slice</span>
+              </div>
+            </div>
+
+            <div class="cohort-card">
+              <div class="metric"><strong>150</strong><span>matched patients</span></div>
+              <div class="metric"><strong>118</strong><span>quoteable evidence</span></div>
+              <div class="metric"><strong>74%</strong><span>high quality</span></div>
+              <div class="metric"><strong>5</strong><span>core filters used</span></div>
+            </div>
+
+            <div class="cards" id="treatment-cards"></div>
+          </section>
+
+          <section id="diagnosis-mode" class="mode-panel">
+            <div class="section-head">
+              <h2>Diagnosis Evidence</h2>
+              <span>for patients still working toward diagnosis</span>
+            </div>
+
+            <div class="diagnosis-toolbar">
+              <div class="left">
+                <span class="pill support-medium">Pattern mode</span>
+                <div class="select" style="min-width: 250px; padding: 10px 12px;">
+                  <span>Explore from symptoms: orthostatic intolerance</span>
+                  <span>▾</span>
+                </div>
+                <div class="select" style="min-width: 210px; padding: 10px 12px;">
+                  <span>Include overlap diagnoses</span>
+                  <span>▾</span>
+                </div>
+              </div>
+              <div class="right">
+                <span class="pill warning">Suggestive evidence only</span>
+              </div>
+            </div>
+
+            <div class="diagnosis-summary">
+              <div class="subtle-card">
+                <p>
+                  This mode flips the question from <strong>“what helped people like me?”</strong> to
+                  <strong>“what diagnoses or phenotypes recur in patients who look like me?”</strong>.
+                  It surfaces patterns from symptom overlap, co-condition structure, treatment-response
+                  hints, and source quotes, while keeping missing evidence visible.
+                </p>
+                <div class="signal-list">
+                  <div class="signal-item"><span><strong>Driving symptoms</strong></span><span>orthostatic intolerance, fatigue / PEM, brain fog</span></div>
+                  <div class="signal-item"><span><strong>Supporting clues</strong></span><span>histamine flares, trigger sensitivity, reduced activity tolerance</span></div>
+                  <div class="signal-item"><span><strong>Negative clues</strong></span><span>few autoimmune-history signals, sparse biomarker detail</span></div>
+                </div>
+              </div>
+              <div class="subtle-card">
+                <p><strong style="display:block;font-size:28px;color:var(--text);margin-bottom:6px;">3</strong>diagnosis patterns surfaced with medium+ support</p>
+                <div class="signal-list">
+                  <div class="signal-item"><span><strong>Best supported</strong></span><span>POTS-like autonomic pattern</span></div>
+                  <div class="signal-item"><span><strong>Most differentiated</strong></span><span>MCAS overlap phenotype</span></div>
+                  <div class="signal-item"><span><strong>Most uncertain</strong></span><span>ME/CFS phenotype until mapping is cleaned</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="diagnosis-grid" id="diagnosis-cards"></div>
+
+            <div class="diagnosis-workspace" style="margin-top: 16px;">
+              <div class="workspace-card" id="diagnosis-workspace-evidence"></div>
+              <div class="stack">
+                <div class="workspace-card" id="diagnosis-workspace-checklist"></div>
+                <div class="workspace-card" id="diagnosis-workspace-clinician"></div>
+              </div>
+            </div>
+          </section>
+
+        </main>
+
+        <aside class="panel drawer">
+          <div id="drawer-content"></div>
+        </aside>
+      </section>
+    </div>
+
+    <script>
+      const treatmentData = {
+        ldn: {
+          key: "ldn",
+          name: "Low-dose naltrexone",
+          support: "High support",
+          summary: "Most consistent broad signal across this cohort, with strong quote availability.",
+          pct: "80%",
+          uniquePatients: 248,
+          totalReports: 449,
+          positive: 358,
+          negative: 76,
+          mixed: 15,
+          sideEffects: "Top side effects: insomnia, nausea, anxiety, brain fog",
+          responses: ["helped brain fog", "helped body aches", "mixed for sleep"],
+          drawerTitle: "Quote Evidence",
+          drawerSubtitle: "selected treatment: low-dose naltrexone",
+          drawerSummary: [
+            { big: "80%", text: "positive in POTS + MCAS slice" },
+            { big: "248", text: "unique patients overall" }
+          ],
+          quotes: [
+            {
+              text: "4.5mg LDN for a couple years and it definitely helped with body aches and fatigue by around twenty percent.",
+              meta: "Strong positive · long covid + pots + mcas"
+            },
+            {
+              text: "LDN lowered inflammation for me, which meant less anxiety, less brain fog, better sleep, and fewer body aches.",
+              meta: "Strong positive · high-quality patient record"
+            },
+            {
+              text: "It helped with body aches, but people seem to respond in very different ways, so I would not call it universal.",
+              meta: "Moderate positive · mixed caution preserved"
+            }
+          ],
+          comparisonTitle: "Subtype Comparison",
+          comparisonSubtitle: "why this result moved",
+          comparisonRows: [
+            ["Antihistamine · POTS + MCAS", "80% (220)"],
+            ["Antihistamine · POTS only", "60% (20)"],
+            ["Ivabradine · POTS + MCAS", "54% (13)"],
+            ["Ivabradine · POTS only", "96% (27)"]
+          ]
+        },
+        antihistamine: {
+          key: "antihistamine",
+          name: "Antihistamine",
+          support: "High support",
+          summary: "Notable subtype split: stronger in POTS + MCAS than POTS-only.",
+          pct: "74%",
+          uniquePatients: 216,
+          totalReports: 475,
+          positive: 350,
+          negative: 113,
+          mixed: 12,
+          sideEffects: "Top side effects: sleepy, weight gain, dehydration, fatigue",
+          responses: ["helped histamine flares", "helped tachycardia", "mixed for fatigue"],
+          drawerTitle: "Quote Evidence",
+          drawerSubtitle: "selected treatment: antihistamine",
+          drawerSummary: [
+            { big: "80%", text: "positive in POTS + MCAS slice" },
+            { big: "60%", text: "positive in POTS-only slice" }
+          ],
+          quotes: [
+            {
+              text: "Cetirizine and famotidine were the first things that noticeably settled my flushing and food-triggered flares.",
+              meta: "Strong positive · MCAS overlap clue"
+            },
+            {
+              text: "It helped the histamine-feeling crashes, but didn’t really solve the fatigue on its own.",
+              meta: "Moderate positive · symptom-specific benefit"
+            },
+            {
+              text: "Antihistamines made me too sleepy to function, even though they took the edge off some reactions.",
+              meta: "Negative / tradeoff · sedation burden"
+            }
+          ],
+          comparisonTitle: "Subtype Comparison",
+          comparisonSubtitle: "where this signal differentiates",
+          comparisonRows: [
+            ["Antihistamine · POTS + MCAS", "80% (220)"],
+            ["Antihistamine · POTS only", "60% (20)"],
+            ["Ketotifen · POTS + MCAS", "81% (36)"],
+            ["Ketotifen · POTS only", "—"]
+          ]
+        },
+        tirzepatide: {
+          key: "tirzepatide",
+          name: "Tirzepatide",
+          support: "High support",
+          summary: "Mixed but interesting signal. Worth inspection because response varies by subtype.",
+          pct: "68%",
+          uniquePatients: 69,
+          totalReports: 126,
+          positive: 85,
+          negative: 31,
+          mixed: 10,
+          sideEffects: "Top side effects: nausea, fatigue, crash, anxiety",
+          responses: ["helped energy", "mixed for orthostatic symptoms", "worsened nausea tolerance"],
+          drawerTitle: "Quote Evidence",
+          drawerSubtitle: "selected treatment: tirzepatide",
+          drawerSummary: [
+            { big: "74%", text: "positive in MCAS slice" },
+            { big: "49%", text: "positive in POTS slice" }
+          ],
+          quotes: [
+            {
+              text: "It helped my inflammation and appetite dysregulation more than my standing intolerance.",
+              meta: "Moderate positive · symptom-specific benefit"
+            },
+            {
+              text: "The nausea was rough at first, but energy and inflammation were better after a few weeks.",
+              meta: "Mixed positive · side-effect tradeoff"
+            },
+            {
+              text: "This one seemed promising for some people, but for me it just added side effects and more instability.",
+              meta: "Negative · variable response"
+            }
+          ],
+          comparisonTitle: "Condition Split",
+          comparisonSubtitle: "where response appears less stable",
+          comparisonRows: [
+            ["Tirzepatide · MCAS", "74% (53)"],
+            ["Tirzepatide · POTS", "49% (37)"],
+            ["Tirzepatide · Long COVID", "68% (93)"],
+            ["Tirzepatide · PEM", "57% (54)"]
+          ]
+        }
+      };
+
+      const diagnosisData = {
+        pots: {
+          key: "pots",
+          name: "POTS",
+          support: "Strong pattern",
+          supportClass: "support-high",
+          description: "Common among matched patients with orthostatic intolerance, tachycardia, and fatigue crashes.",
+          count: "345 similar records",
+          signalText: "High co-occurrence",
+          list: [
+            "Signals: orthostatic intolerance, palpitations, exercise intolerance",
+            "Common overlaps: Long COVID, MCAS, PEM",
+            "Evidence lane: quotes mentioning heart rate spikes, standing intolerance, tilt-table discussion",
+            "Clinician prompt: ask whether orthostatic vitals or formal autonomic testing would clarify the picture"
+          ],
+          workspace: {
+            subtitle: "selected pattern: POTS",
+            why: "POTS rises to the top because the current profile combines orthostatic symptoms, fatigue crashes, and a high overlap with long COVID + MCAS records. Similar patients often describe heart rate spikes when standing, needing to sit or lie down after minor exertion, and treatment experimentation with beta blockers, ivabradine, salt, or compression strategies.",
+            quotes: [
+              ["Standing to shower or cook would spike my heart rate and leave me wiped out for the rest of the day.", "Pattern clue · orthostatic intolerance"],
+              ["A lot of my symptoms looked like anxiety until I realized the problem was how extreme my heart rate got upright.", "Pattern clue · misattribution risk"],
+              ["Antihistamines helped some of the flares, but the standing intolerance still felt like its own separate problem.", "Overlap clue · POTS + MCAS phenotype"]
+            ],
+            clues: [
+              ["Orthostatic intolerance", "Core clue is present and repeatedly emphasized across matched records.", "present", "Present"],
+              ["Palpitations / heart rate spikes", "Indirectly supported by profile and similar-patient quotes, but still worth confirming explicitly.", "present", "Likely"],
+              ["PEM after exertion", "Strong overlap clue, but it may point to an overlapping phenotype rather than POTS alone.", "conflicting", "Overlap"],
+              ["Formal orthostatic vitals", "No structured evidence in the profile yet. This is a meaningful missing piece.", "missing", "Missing"],
+              ["Alternative explanations ruled out", "The dataset is weak on differential diagnosis, so this should stay with the clinician.", "missing", "Needed"]
+            ],
+            questions: [
+              "Do my symptoms justify checking orthostatic vitals or referral for autonomic testing?",
+              "Are my post-exertional crashes better explained by PEM, dysautonomia, or both?",
+              "If antihistamines affect flares but not standing intolerance, does that suggest an overlap pattern rather than one diagnosis?",
+              "What history or tests would help separate POTS-like symptoms from anxiety, deconditioning, or other causes?"
+            ],
+            drawerSummary: [
+              { big: "345", text: "similar records reference this pattern" },
+              { big: "High", text: "pattern support from symptom overlap" }
+            ],
+            drawerRows: [
+              ["Primary clue", "orthostatic intolerance"],
+              ["Overlap clue", "MCAS-like flare pattern"],
+              ["Missing evidence", "formal orthostatic vitals"],
+              ["Best next conversation", "autonomic workup questions"]
+            ]
+          }
+        },
+        mcas: {
+          key: "mcas",
+          name: "MCAS",
+          support: "Moderate pattern",
+          supportClass: "support-medium",
+          description: "Frequently appears in patients reporting histamine flares, food triggers, flushing, and antihistamine response.",
+          count: "298 similar records",
+          signalText: "Subtype differentiator",
+          list: [
+            "Signals: food reactions, flushing, symptom swings after meals or supplements",
+            "Common overlaps: POTS, Long COVID",
+            "Evidence lane: quote clusters around antihistamines, ketotifen, trigger tracking",
+            "Clinician prompt: review trigger patterns and whether antihistamine response is meaningful"
+          ],
+          workspace: {
+            subtitle: "selected pattern: MCAS overlap phenotype",
+            why: "MCAS-like overlap appears because the symptom profile includes histamine-style flares, food-triggered variability, and treatment patterns that track with antihistamines and ketotifen. This is best treated as a phenotype signal, not a lab-confirmed mast-cell diagnosis.",
+            quotes: [
+              ["Meals, supplements, and random foods could trigger flushing and a whole-body flare that felt different from my baseline fatigue.", "Pattern clue · trigger sensitivity"],
+              ["Antihistamines were one of the only things that reliably took the edge off the episodes.", "Pattern clue · response hint"],
+              ["I only understood the pattern after keeping a log of foods, symptoms, and reactions.", "Pattern clue · self-tracking evidence"]
+            ],
+            clues: [
+              ["Food or supplement-triggered flares", "Strongly aligned with the pattern surfaced in similar patients.", "present", "Present"],
+              ["Flushing / histamine-like episodes", "Suggestive and often paired with antihistamine response in the dataset.", "present", "Likely"],
+              ["Antihistamine sensitivity", "Helpful response can support the pattern, but non-response does not rule it out.", "conflicting", "Mixed"],
+              ["Formal allergy or mast-cell workup", "Usually absent in Reddit-derived evidence and missing here too.", "missing", "Missing"],
+              ["Specific trigger history", "Needs structured documentation to make the clinician conversation more useful.", "missing", "Needed"]
+            ],
+            questions: [
+              "Do my flare patterns suggest a histamine or mast-cell style overlap worth evaluating further?",
+              "Would structured symptom and trigger logging be useful before drawing conclusions?",
+              "How should antihistamine response be interpreted alongside orthostatic or PEM symptoms?",
+              "What alternative explanations for food-triggered flares should be considered?"
+            ],
+            drawerSummary: [
+              { big: "298", text: "similar records reference this pattern" },
+              { big: "Medium", text: "pattern support with overlap uncertainty" }
+            ],
+            drawerRows: [
+              ["Primary clue", "trigger-linked symptom flares"],
+              ["Overlap clue", "antihistamine / ketotifen response"],
+              ["Missing evidence", "formal workup and structured trigger log"],
+              ["Best next conversation", "mast-cell style symptoms and differential diagnosis"]
+            ]
+          }
+        },
+        mecfs: {
+          key: "mecfs",
+          name: "ME/CFS phenotype",
+          support: "Exploratory",
+          supportClass: "support-medium",
+          description: "Use carefully: this should present as a symptom-pattern phenotype until canonical mapping is corrected.",
+          count: "PEM-heavy cohort",
+          signalText: "Needs cleaner mapping",
+          list: [
+            "Signals: post-exertional malaise, crashes, reduced baseline, sensory overload",
+            "Common overlaps: Long COVID, POTS",
+            "Evidence lane: quotes describing crashes after activity and pacing limits",
+            "Clinician prompt: discuss PEM explicitly rather than relying on broad fatigue labels"
+          ],
+          workspace: {
+            subtitle: "selected pattern: ME/CFS-like phenotype",
+            why: "This pattern appears because PEM-style language and crash descriptions are common in similar patients. It should be shown as a phenotype or symptom-cluster view right now, because the notebook review found canonicalization problems that could overstate specific diagnosis labels.",
+            quotes: [
+              ["I could do one normal task and then lose the next two days to a crash.", "Pattern clue · PEM language"],
+              ["The fatigue wasn’t constant in the usual sense, it was more like a lowered ceiling that I kept crashing through.", "Pattern clue · reduced baseline"],
+              ["Pacing mattered more than any single treatment, which made me think this was more than just deconditioning.", "Pattern clue · pacing relevance"]
+            ],
+            clues: [
+              ["Post-exertional malaise", "One of the strongest phenotype clues in the whole explorer.", "present", "Present"],
+              ["Crash-and-recovery pattern", "Common in similar patient stories and often more informative than a generic fatigue label.", "present", "Likely"],
+              ["Orthostatic symptoms also present", "Suggests overlap rather than a clean single-phenotype story.", "conflicting", "Overlap"],
+              ["Clean canonical diagnosis mapping", "Currently not reliable enough for a hard diagnosis claim.", "missing", "Missing"],
+              ["Objective functional baseline tracking", "Would improve the clinician conversation but is often absent in the source data.", "missing", "Needed"]
+            ],
+            questions: [
+              "Do my symptoms fit a PEM-centered phenotype, and how is that different from ordinary fatigue?",
+              "How should overlapping dysautonomia symptoms change interpretation?",
+              "Would a pacing history help clarify whether this pattern is clinically meaningful?",
+              "What terminology would make this conversation more precise than simply saying I feel tired?"
+            ],
+            drawerSummary: [
+              { big: "PEM", text: "dominant clue driving this phenotype" },
+              { big: "Low", text: "label confidence until mapping is fixed" }
+            ],
+            drawerRows: [
+              ["Primary clue", "post-exertional malaise"],
+              ["Overlap clue", "orthostatic intolerance"],
+              ["Missing evidence", "clean canonical diagnosis mapping"],
+              ["Best next conversation", "PEM history, pacing, and phenotype framing"]
+            ]
+          }
+        }
+      };
+
+      let currentMode = "treatment";
+      let selectedTreatment = "ldn";
+      let selectedDiagnosis = "pots";
+      function supportClass(label) {
+        return label.toLowerCase().includes("high") || label.toLowerCase().includes("strong")
+          ? "support-high"
+          : "support-medium";
+      }
+
+      function renderTreatmentCards() {
+        const container = document.getElementById("treatment-cards");
+        container.innerHTML = Object.values(treatmentData)
+          .map((item) => {
+            const total = item.totalReports;
+            const pos = ((item.positive / total) * 100).toFixed(1);
+            const neg = ((item.negative / total) * 100).toFixed(1);
+            const mix = ((item.mixed / total) * 100).toFixed(1);
+            return `
+              <article class="treatment-card ${selectedTreatment === item.key ? "selected" : ""}" data-treatment="${item.key}">
+                <div class="treatment-head">
+                  <div class="treatment-title">
+                    <div class="pill ${supportClass(item.support)}" style="width: fit-content;">${item.support}</div>
+                    <h4>${item.name}</h4>
+                    <p>${item.summary}</p>
+                  </div>
+                  <div class="score">
+                    <strong>${item.pct}</strong>
+                    <span>positive reports</span>
+                  </div>
+                </div>
+                <div class="stats-row">
+                  <div class="stat"><strong>${item.uniquePatients}</strong><span>unique patients</span></div>
+                  <div class="stat"><strong>${item.totalReports}</strong><span>total reports</span></div>
+                  <div class="stat"><strong>${item.positive}</strong><span>positive</span></div>
+                  <div class="stat"><strong>${item.negative}</strong><span>negative</span></div>
+                </div>
+                <div class="bar">
+                  <div class="pos" style="width: ${pos}%"></div>
+                  <div class="neg" style="width: ${neg}%"></div>
+                  <div class="mix" style="width: ${mix}%"></div>
+                </div>
+                <div class="response-row">
+                  ${item.responses.map((r) => `<span class="pill response">${r}</span>`).join("")}
+                </div>
+                <div class="card-foot">
+                  <p>${item.sideEffects}</p>
+                  <div class="actions">
+                    <button class="ghost" data-treatment-action="${item.key}">View Quotes</button>
+                    <button class="ghost" data-treatment-action="${item.key}">Inspect</button>
+                  </div>
+                </div>
+              </article>
+            `;
+          })
+          .join("");
+
+        container.querySelectorAll("[data-treatment]").forEach((card) => {
+          card.addEventListener("click", () => {
+            selectedTreatment = card.dataset.treatment;
+            renderTreatmentCards();
+            if (currentMode === "treatment") renderDrawer();
+          });
+        });
+      }
+
+      function renderDiagnosisCards() {
+        const container = document.getElementById("diagnosis-cards");
+        container.innerHTML = Object.values(diagnosisData)
+          .map((item) => `
+            <article class="diagnosis-card ${selectedDiagnosis === item.key ? "selected" : ""}" data-diagnosis="${item.key}">
+              <div class="pill ${item.supportClass}" style="width: fit-content; margin-bottom: 10px;">${item.support}</div>
+              <h4>${item.name}</h4>
+              <p>${item.description}</p>
+              <div class="signal">
+                <span>${item.count}</span>
+                <span>${item.signalText}</span>
+              </div>
+              <div class="diag-list">
+                ${item.list.map((line) => `<span><strong>${line.split(":")[0]}:</strong>${line.includes(":") ? line.split(":").slice(1).join(":") : ""}</span>`).join("")}
+              </div>
+            </article>
+          `)
+          .join("");
+
+        container.querySelectorAll("[data-diagnosis]").forEach((card) => {
+          card.addEventListener("click", () => {
+            selectedDiagnosis = card.dataset.diagnosis;
+            renderDiagnosisCards();
+            renderDiagnosisWorkspace();
+            if (currentMode === "diagnosis") renderDrawer();
+          });
+        });
+      }
+
+      function renderDiagnosisWorkspace() {
+        const item = diagnosisData[selectedDiagnosis];
+        const evidence = document.getElementById("diagnosis-workspace-evidence");
+        const checklist = document.getElementById("diagnosis-workspace-checklist");
+        const clinician = document.getElementById("diagnosis-workspace-clinician");
+
+        evidence.innerHTML = `
+          <div class="section-head" style="margin-bottom: 0;">
+            <h3>Why This Diagnosis Appears</h3>
+            <span>${item.workspace.subtitle}</span>
+          </div>
+          <div class="drawer-tabs">
+            <span class="drawer-tab active">Evidence</span>
+            <span class="drawer-tab">Missing clues</span>
+            <span class="drawer-tab">Questions</span>
+          </div>
+          <div class="why-box">${item.workspace.why}</div>
+          <div class="stack">
+            ${item.workspace.quotes
+              .map(
+                ([text, meta]) => `
+                <div class="quote">
+                  <p>${text}</p>
+                  <div class="meta">${meta}</div>
+                </div>
+              `
+              )
+              .join("")}
+          </div>
+        `;
+
+        checklist.innerHTML = `
+          <div class="section-head" style="margin-bottom: 0;">
+            <h3>Symptom Clues</h3>
+            <span>what fits vs what is missing</span>
+          </div>
+          <div class="clue-grid">
+            ${item.workspace.clues
+              .map(
+                ([title, text, badgeClass, badgeText]) => `
+                <div class="clue-row">
+                  <div>
+                    <strong>${title}</strong>
+                    <p>${text}</p>
+                  </div>
+                  <span class="badge ${badgeClass}">${badgeText}</span>
+                </div>
+              `
+              )
+              .join("")}
+          </div>
+        `;
+
+        clinician.innerHTML = `
+          <div class="section-head" style="margin-bottom: 0;">
+            <h3>Questions to Discuss With Clinician</h3>
+            <span>conversation prep, not advice</span>
+          </div>
+          <div class="clinician-list">
+            ${item.workspace.questions.map((q, i) => `<span><strong>${i + 1}.</strong> ${q}</span>`).join("")}
+          </div>
+          <div class="callout">
+            Diagnosis mode should help users organize observations and recognize recurring patterns in similar
+            patient stories. It should never imply that a surfaced diagnosis is confirmed, complete, or exclusive.
+          </div>
+        `;
+      }
+
+      function renderDrawer() {
+        const drawer = document.getElementById("drawer-content");
+
+        if (currentMode === "treatment") {
+          const item = treatmentData[selectedTreatment];
+          drawer.innerHTML = `
+            <div class="section-head">
+              <h3>${item.drawerTitle}</h3>
+              <span>${item.drawerSubtitle}</span>
+            </div>
+            <div class="summary-grid">
+              ${item.drawerSummary
+                .map(
+                  (s) => `
+                <div class="subtle-card">
+                  <p><strong style="display:block;font-size:24px;color:var(--text);margin-bottom:6px;">${s.big}</strong>${s.text}</p>
+                </div>
+              `
+                )
+                .join("")}
+            </div>
+            <div class="stack">
+              ${item.quotes
+                .map(
+                  (q) => `
+                <div class="quote">
+                  <p>${q.text}</p>
+                  <div class="meta">${q.meta}</div>
+                </div>
+              `
+                )
+                .join("")}
+            </div>
+            <div style="height: 18px;"></div>
+            <div class="section-head" style="margin-bottom: 10px;">
+              <h3 style="font-size: 20px;">${item.comparisonTitle}</h3>
+              <span>${item.comparisonSubtitle}</span>
+            </div>
+            <div class="mini-table">
+              ${item.comparisonRows.map(([a, b]) => `<div class="mini-row"><span>${a}</span><span>${b}</span></div>`).join("")}
+            </div>
+          `;
+          return;
+        }
+
+        const item = diagnosisData[selectedDiagnosis];
+        drawer.innerHTML = `
+          <div class="section-head">
+            <h3>Diagnosis Workup Drawer</h3>
+            <span>${item.workspace.subtitle}</span>
+          </div>
+          <div class="summary-grid">
+            ${item.workspace.drawerSummary
+              .map(
+                (s) => `
+              <div class="subtle-card">
+                <p><strong style="display:block;font-size:24px;color:var(--text);margin-bottom:6px;">${s.big}</strong>${s.text}</p>
+              </div>
+            `
+              )
+              .join("")}
+          </div>
+          <div class="drawer-tabs" style="margin-bottom: 14px;">
+            <span class="drawer-tab active">Why it appears</span>
+            <span class="drawer-tab">Missing clues</span>
+          </div>
+          <div class="why-box" style="margin-bottom: 14px;">
+            The diagnosis drawer explains <strong>why a pattern surfaced</strong>, which clues are carrying the match,
+            and what evidence is still absent. This keeps diagnosis mode useful for exploration without presenting it
+            as a diagnostic engine.
+          </div>
+          <div class="mini-table">
+            ${item.workspace.drawerRows.map(([a, b]) => `<div class="mini-row"><span>${a}</span><span>${b}</span></div>`).join("")}
+          </div>
+        `;
+      }
+
+      function switchMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll(".tab").forEach((tab) => {
+          tab.classList.toggle("active", tab.dataset.mode === mode);
+        });
+        document.querySelectorAll(".mode-panel").forEach((panel) => {
+          panel.classList.toggle("active", panel.id === `${mode}-mode`);
+        });
+        renderDrawer();
+      }
+
+      document.querySelectorAll(".tab[data-mode]").forEach((tab) => {
+        tab.addEventListener("click", () => switchMode(tab.dataset.mode));
+      });
+
+      document.querySelectorAll(".chip").forEach((chip) => {
+        chip.addEventListener("click", () => chip.classList.toggle("active"));
+      });
+
+      renderTreatmentCards();
+      renderDiagnosisCards();
+      renderDiagnosisWorkspace();
+      renderDrawer();
+    </script>
+  </body>
+</html>

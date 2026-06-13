@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Patients Like Me</title>
+    <style>
+      :root {
+        --bg: #f5f1e8;
+        --bg-strong: #fffaf2;
+        --panel: rgba(255, 252, 246, 0.84);
+        --line: rgba(34, 39, 37, 0.1);
+        --text: #1f2422;
+        --muted: #66706a;
+        --moss: #4f6654;
+        --moss-soft: #d9e3d8;
+        --amber: #9b6a34;
+        --amber-soft: #f1e4cf;
+        --stone: #ece6d7;
+        --shadow: 0 22px 60px rgba(42, 48, 45, 0.08);
+        --radius-xl: 26px;
+        --radius-lg: 18px;
+        --radius-md: 14px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(79, 102, 84, 0.1), transparent 28%),
+          radial-gradient(circle at bottom right, rgba(155, 106, 52, 0.09), transparent 24%),
+          linear-gradient(180deg, #f8f4ec 0%, var(--bg) 100%);
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.2;
+        background-image:
+          linear-gradient(rgba(31, 36, 34, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(31, 36, 34, 0.03) 1px, transparent 1px);
+        background-size: 32px 32px;
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.72), transparent 92%);
+      }
+
+      .shell {
+        max-width: 1580px;
+        margin: 0 auto;
+        padding: 28px;
+      }
+
+      .banner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 18px;
+        border: 1px solid rgba(155, 106, 52, 0.18);
+        border-radius: 999px;
+        background: rgba(255, 248, 238, 0.9);
+        color: #6d5636;
+        font-size: 13px;
+        letter-spacing: 0.02em;
+        box-shadow: 0 10px 30px rgba(125, 92, 53, 0.06);
+      }
+
+      .banner strong {
+        font-weight: 700;
+      }
+
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 24px;
+        margin: 28px 0 24px;
+      }
+
+      .hero h1 {
+        margin: 0;
+        max-width: 860px;
+        font-family: "Iowan Old Style", "Palatino Linotype", serif;
+        font-size: clamp(42px, 7vw, 72px);
+        font-weight: 600;
+        line-height: 0.95;
+        letter-spacing: -0.03em;
+      }
+
+      .hero p {
+        max-width: 760px;
+        margin: 14px 0 0;
+        color: var(--muted);
+        font-size: 17px;
+        line-height: 1.65;
+      }
+
+      .nav-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.78);
+        color: var(--text);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .app-grid {
+        display: block;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        background: var(--panel);
+        backdrop-filter: blur(16px);
+        box-shadow: var(--shadow);
+      }
+
+      .main {
+        padding: 22px;
+      }
+
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .section-head h2,
+      .section-head h3 {
+        margin: 0;
+        font-family: "Iowan Old Style", "Palatino Linotype", serif;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .section-head h2 {
+        font-size: 30px;
+      }
+
+      .section-head h3 {
+        font-size: 24px;
+      }
+
+      .section-head span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .workspace-card,
+      .subtle-card {
+        padding: 18px;
+        border: 1px solid rgba(34, 39, 37, 0.08);
+        border-radius: 22px;
+        background: var(--bg-strong);
+      }
+
+      .stack,
+      .keyword-top,
+      .keyword-results-grid,
+      .keyword-side-stack,
+      .keyword-preset-row,
+      .keyword-query-list,
+      .keyword-summary-grid,
+      .keyword-user-list,
+      .keyword-user-post-list,
+      .keyword-treatment-list,
+      .keyword-post-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .keyword-top {
+        grid-template-columns: 1fr;
+        margin-bottom: 18px;
+      }
+
+      .keyword-results-grid {
+        grid-template-columns: 1.05fr 0.95fr;
+      }
+
+      .keyword-side-stack {
+        align-content: start;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .text-input,
+      .select-input,
+      .query-weight-select {
+        width: 100%;
+        padding: 14px 15px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.86);
+        color: var(--text);
+        font: inherit;
+      }
+
+      .text-input::placeholder {
+        color: #8f9893;
+      }
+
+      .keyword-compose {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 160px auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .button-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+      }
+
+      .button {
+        padding: 13px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.82);
+        color: var(--text);
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      .button.primary {
+        background: var(--moss);
+        border-color: var(--moss);
+        color: #fbfbf7;
+      }
+
+      .keyword-upload {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .keyword-upload input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+
+      .keyword-preset-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .keyword-preset,
+      .keyword-term-card,
+      .keyword-step,
+      .keyword-summary-card,
+      .keyword-user-card,
+      .keyword-treatment-row,
+      .keyword-post-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.68);
+      }
+
+      .keyword-preset {
+        padding: 12px 14px;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .keyword-preset span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .keyword-term-card,
+      .keyword-summary-card,
+      .keyword-step,
+      .keyword-user-card,
+      .keyword-treatment-row,
+      .keyword-post-card {
+        padding: 14px 16px;
+      }
+
+      .keyword-term-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 140px auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .keyword-term-main {
+        display: grid;
+        gap: 4px;
+      }
+
+      .keyword-term-main strong,
+      .keyword-user-card strong,
+      .keyword-treatment-row strong,
+      .keyword-post-card strong {
+        font-size: 15px;
+      }
+
+      .keyword-term-main span,
+      .keyword-treatment-row p,
+      .keyword-post-card p,
+      .keyword-empty p,
+      .keyword-db-status,
+      .keyword-step-copy,
+      .keyword-summary-card span {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .keyword-mini-button {
+        padding: 10px 12px;
+        border: 1px solid rgba(34, 39, 37, 0.1);
+        border-radius: 12px;
+        background: transparent;
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .keyword-db-status {
+        min-height: 20px;
+      }
+
+      .keyword-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .keyword-summary-card strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 28px;
+        letter-spacing: -0.04em;
+      }
+
+      .keyword-step {
+        display: grid;
+        gap: 10px;
+      }
+
+      .keyword-step-head,
+      .keyword-treatment-head,
+      .keyword-post-head,
+      .keyword-post-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 12px;
+      }
+
+      .keyword-step-title {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .weight-badge,
+      .pill {
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .weight-badge.high,
+      .pill.support-high {
+        background: var(--moss-soft);
+        color: #35513b;
+      }
+
+      .weight-badge.medium,
+      .pill.support-medium {
+        background: var(--amber-soft);
+        color: var(--amber);
+      }
+
+      .weight-badge.exclude {
+        background: rgba(180, 72, 88, 0.12);
+        color: #8e3443;
+      }
+
+      .weight-badge.low,
+      .pill.warning,
+      .pill.response {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(34, 39, 37, 0.08);
+        color: #4e5d55;
+      }
+
+      .keyword-step-bars {
+        display: grid;
+        gap: 8px;
+      }
+
+      .keyword-bar-label {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .keyword-bar-track {
+        overflow: hidden;
+        height: 10px;
+        border-radius: 999px;
+        background: #ece7db;
+      }
+
+      .keyword-bar-fill {
+        height: 100%;
+        border-radius: 999px;
+      }
+
+      .keyword-bar-fill.any {
+        background: linear-gradient(90deg, #78937c, #95ad99);
+      }
+
+      .keyword-bar-fill.all {
+        background: linear-gradient(90deg, #9b6a34, #cca26b);
+      }
+
+      .keyword-treatment-row,
+      .keyword-user-card,
+      .keyword-post-card {
+        display: grid;
+        gap: 10px;
+      }
+
+      .keyword-user-card {
+        cursor: pointer;
+        transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background 160ms ease;
+        padding: 10px 12px;
+        gap: 6px;
+      }
+
+      .keyword-user-card:hover,
+      .keyword-user-card.selected {
+        transform: translateY(-2px);
+        border-color: rgba(155, 106, 52, 0.28);
+        box-shadow: 0 16px 35px rgba(42, 48, 45, 0.08);
+        background: rgba(255, 250, 242, 0.92);
+      }
+
+      .keyword-user-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 12px;
+      }
+
+      .keyword-user-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .keyword-user-card .pill {
+        padding: 4px 8px;
+        font-size: 10px;
+      }
+
+      .keyword-user-card p {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .keyword-treatment-score {
+        text-align: right;
+      }
+
+      .keyword-treatment-score strong {
+        display: block;
+        font-size: 30px;
+        letter-spacing: -0.05em;
+      }
+
+      .keyword-treatment-stats,
+      .keyword-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .keyword-post-card {
+        cursor: pointer;
+        transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      }
+
+      .keyword-post-card:hover,
+      .keyword-post-card.selected {
+        transform: translateY(-2px);
+        border-color: rgba(79, 102, 84, 0.3);
+        box-shadow: 0 16px 35px rgba(42, 48, 45, 0.08);
+      }
+
+      .keyword-post-card h4 {
+        margin: 0;
+        font-size: 20px;
+        font-family: "Iowan Old Style", "Palatino Linotype", serif;
+        font-weight: 600;
+      }
+
+      .keyword-post-card p,
+      .keyword-treatment-row p {
+        margin: 0;
+      }
+
+      .keyword-empty {
+        padding: 28px 18px;
+        border: 1px dashed rgba(34, 39, 37, 0.18);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.42);
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .subtle-card p,
+      .why-box,
+      .mini-row {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .mini-table {
+        display: grid;
+        gap: 10px;
+      }
+
+      .mini-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .mini-row:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .mini-row strong,
+      .why-box strong,
+      .subtle-card strong {
+        color: var(--text);
+      }
+
+      .why-box {
+        padding: 14px;
+        border-radius: 16px;
+        background: #f6f1e8;
+      }
+
+      code {
+        font-family: "SFMono-Regular", "Menlo", monospace;
+      }
+
+      @media (max-width: 1220px) {
+      .hero,
+      .keyword-top,
+        .keyword-results-grid,
+        .keyword-preset-row,
+        .keyword-summary-grid,
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 820px) {
+        .keyword-compose,
+        .keyword-term-card {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="banner">
+        <span><strong>Self-reported, AI-extracted patient experience.</strong> Not medical advice.</span>
+        <span>Rank posts transparently, keep denominators visible, and inspect the source text before interpreting treatment signals.</span>
+      </div>
+
+      <section class="hero">
+        <div>
+          <h1>Patients Like Me</h1>
+          <p>
+            Add symptoms, diagnoses, or free-text phrases with high, medium, or low weight, or mark
+            terms to exclude. The page ranks posts from <code>posts.db</code> by cumulative keyword
+            overlap, shows how the cohort changes as you add filters, and summarizes the top
+            treatments reported by the matched users.
+          </p>
+        </div>
+      </section>
+
+      <div class="nav-row">
+        <a class="back-link" href="subtype_explorer_prototype.html">← Back to subtype explorer prototype</a>
+      </div>
+
+      <section class="app-grid">
+        <main class="panel main">
+          <div class="section-head">
+            <h2>Patients Like Me</h2>
+            <span>rank live corpus posts by weighted keyword overlap, then summarize treatments for the matched users</span>
+          </div>
+
+          <div class="keyword-top">
+            <div class="workspace-card">
+              <div class="section-head">
+                <h3>Build a Weighted Query</h3>
+                <span>symptoms, diagnoses, or any phrase</span>
+              </div>
+              <div class="stack">
+                <div class="keyword-compose">
+                  <input id="keyword-term-input" class="text-input" type="text" placeholder="Try: brain fog, PEM, histamine, POTS, flu-like, crash after shower" />
+                  <select id="keyword-weight-input" class="select-input">
+                    <option value="high">High weight</option>
+                    <option value="medium">Medium weight</option>
+                    <option value="low">Low weight</option>
+                    <option value="exclude">Exclude</option>
+                  </select>
+                  <button id="keyword-add-btn" class="button primary">Add keyword</button>
+                </div>
+
+                <div class="field">
+                  <label>Top symptoms &amp; diagnoses in this cohort</label>
+                  <div class="keyword-preset-row" id="keyword-preset-row"></div>
+                </div>
+
+                <div class="field">
+                  <label>Current query</label>
+                  <div class="keyword-query-list" id="keyword-query-list"></div>
+                </div>
+
+                <div class="keyword-db-status" id="keyword-db-status"></div>
+
+                <div class="button-row">
+                  <button id="keyword-reset-btn" class="button">Clear Query</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="keyword-results-grid">
+            <div class="keyword-side-stack">
+              <div class="workspace-card">
+                <div class="section-head">
+                  <h3>Ranked Users</h3>
+                  <span id="keyword-users-caption">ranked from the current cohort</span>
+                </div>
+                <div class="keyword-user-list" id="keyword-user-list"></div>
+              </div>
+
+              <div class="workspace-card">
+                <div class="section-head">
+                  <h3>Ranked Posts</h3>
+                  <span id="keyword-posts-caption">waiting for data</span>
+                </div>
+                <div class="keyword-post-list" id="keyword-post-list"></div>
+              </div>
+            </div>
+
+            <div class="keyword-side-stack">
+              <div class="workspace-card">
+                <div class="section-head">
+                  <h3>Top Treatments</h3>
+                  <span id="keyword-treatments-caption">aggregated across users whose posts match the query</span>
+                </div>
+                <div class="keyword-treatment-list" id="keyword-treatment-list"></div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </section>
+    </div>
+
+    <script>
+      const keywordWeightValue = { low: 1, medium: 2, high: 3, exclude: 0 };
+      const defaultQuery = [];
+
+      let keywordQuery = defaultQuery.map((item) => ({ ...item }));
+      let keywordLastResults = null;
+      let keywordMetadata = null;
+      let selectedUserId = null;
+      let selectedUserPosts = null;
+      let activeSearchToken = 0;
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function formatWeight(weight) {
+        return weight.charAt(0).toUpperCase() + weight.slice(1);
+      }
+
+      function describeWeight(weight) {
+        if (weight === "exclude") {
+          return "Excludes posts containing this term.";
+        }
+        const points = keywordWeightValue[weight];
+        return `Counts a matching post for ${points} point${points === 1 ? "" : "s"}.`;
+      }
+
+      function normalizeKeywordTerm(value) {
+        return String(value || "").trim().replace(/\s+/g, " ");
+      }
+
+      function weightBadge(weight) {
+        return `<span class="weight-badge ${weight}">${formatWeight(weight)}</span>`;
+      }
+
+      function supportTierClass(label) {
+        return label.startsWith("High") ? "support-high" : label.startsWith("Medium") ? "support-medium" : "warning";
+      }
+
+      function formatTimestamp(epochSeconds) {
+        if (!epochSeconds) return "Date unknown";
+        return new Date(epochSeconds * 1000).toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric"
+        });
+      }
+
+      async function apiFetch(path, options = {}) {
+        const response = await fetch(path, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(options.headers || {})
+          },
+          ...options
+        });
+
+        if (!response.ok) {
+          let detail = "";
+          try {
+            detail = await response.text();
+          } catch (error) {
+            detail = "";
+          }
+          throw new Error(detail || `Request failed with ${response.status}`);
+        }
+
+        return response.json();
+      }
+
+      function formatApiErrorMessage(rawMessage) {
+        try {
+          const parsed = JSON.parse(rawMessage);
+          if (Array.isArray(parsed?.detail)) {
+            return parsed.detail.map((item) => item.msg).join("; ");
+          }
+          if (parsed?.detail) {
+            return String(parsed.detail);
+          }
+        } catch (error) {
+          // Fall back to the raw message when the API response is not JSON.
+        }
+        return rawMessage;
+      }
+
+      function setKeywordStatus(message) {
+        document.getElementById("keyword-db-status").innerHTML = message;
+      }
+
+      function formatSuggestionType(conditionType) {
+        return conditionType === "symptom" ? "Symptom" : "Diagnosis";
+      }
+
+      function formatUserLabel(userId) {
+        return `Patient ${String(userId).slice(0, 8)}`;
+      }
+
+      function summarizeTerms(terms) {
+        const list = Array.isArray(terms) ? terms.filter(Boolean) : [];
+        if (!list.length) return "none listed";
+        return list.join(", ");
+      }
+
+      function renderPostCards(posts) {
+        return posts
+          .map(
+            (post) => `
+              <article class="keyword-post-card">
+                <div class="keyword-post-head">
+                  <div>
+                    <h4>${escapeHtml(post.title?.trim() || "Comment")}</h4>
+                    <p>${escapeHtml(post.excerpt)}</p>
+                  </div>
+                  <div class="keyword-treatment-score">
+                    <strong>${post.score}</strong>
+                    <span>score</span>
+                  </div>
+                </div>
+                <div class="keyword-post-meta">
+                  <div class="keyword-chips">
+                    ${post.matched_term_details.map((item) => `<span class="pill response">${escapeHtml(item.term)}</span>`).join("")}
+                  </div>
+                  <span class="keyword-step-copy">${escapeHtml(post.flair)} · ${formatTimestamp(post.post_date)}</span>
+                </div>
+              </article>
+            `
+          )
+          .join("");
+      }
+
+      function renderKeywordPresets() {
+        const container = document.getElementById("keyword-preset-row");
+
+        if (!keywordLastResults?.top_cohort_suggestions?.length) {
+          container.innerHTML = `
+            <div class="keyword-empty">
+              <p>Run a search to see the top symptoms and diagnoses in the remaining cohort.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = keywordLastResults.top_cohort_suggestions
+          .map(
+            (suggestion) => `
+              <button class="keyword-preset" data-preset-term="${escapeHtml(suggestion.term)}" data-preset-weight="medium">
+                ${escapeHtml(suggestion.term)}
+                <span>${suggestion.pct_users}% match · ${formatSuggestionType(suggestion.condition_type)}</span>
+              </button>
+            `
+          )
+          .join("");
+
+        container.querySelectorAll("[data-preset-term]").forEach((button) => {
+          button.addEventListener("click", async () => {
+            const didAdd = addKeywordTerm(button.dataset.presetTerm, button.dataset.presetWeight);
+            if (didAdd) {
+              await runKeywordSearch();
+            }
+          });
+        });
+      }
+
+      function renderKeywordQueryList() {
+        const container = document.getElementById("keyword-query-list");
+
+        if (!keywordQuery.length) {
+          container.innerHTML = `
+            <div class="keyword-empty">
+              <p>Add at least one symptom, diagnosis, or phrase to search the patient corpus.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = keywordQuery
+          .map(
+            (item, index) => `
+              <div class="keyword-term-card">
+                <div class="keyword-term-main">
+                  <strong>${escapeHtml(item.term)}</strong>
+                  <span>${describeWeight(item.weight)}</span>
+                </div>
+                <select class="query-weight-select" data-query-weight="${index}">
+                  <option value="high" ${item.weight === "high" ? "selected" : ""}>High</option>
+                  <option value="medium" ${item.weight === "medium" ? "selected" : ""}>Medium</option>
+                  <option value="low" ${item.weight === "low" ? "selected" : ""}>Low</option>
+                  <option value="exclude" ${item.weight === "exclude" ? "selected" : ""}>Exclude</option>
+                </select>
+                <button class="keyword-mini-button" data-query-remove="${index}">Remove</button>
+              </div>
+            `
+          )
+          .join("");
+
+        container.querySelectorAll("[data-query-weight]").forEach((select) => {
+          select.addEventListener("change", async () => {
+            const index = Number(select.dataset.queryWeight);
+            keywordQuery[index].weight = select.value;
+            await runKeywordSearch();
+          });
+        });
+
+        container.querySelectorAll("[data-query-remove]").forEach((button) => {
+          button.addEventListener("click", async () => {
+            keywordQuery.splice(Number(button.dataset.queryRemove), 1);
+            await runKeywordSearch();
+          });
+        });
+      }
+
+      function addKeywordTerm(term, weight) {
+        const normalized = normalizeKeywordTerm(term);
+        if (!normalized) return false;
+
+        const existing = keywordQuery.find((item) => item.term.toLowerCase() === normalized.toLowerCase());
+        if (existing) {
+          existing.weight = weight;
+        } else {
+          keywordQuery.push({ term: normalized, weight });
+        }
+
+        document.getElementById("keyword-term-input").value = "";
+        return true;
+      }
+
+      function renderInitialState() {
+        renderKeywordQueryList();
+        renderKeywordPresets();
+        const posts = document.getElementById("keyword-post-list");
+        const users = document.getElementById("keyword-user-list");
+        const treatments = document.getElementById("keyword-treatment-list");
+        const postsCaption = document.getElementById("keyword-posts-caption");
+        const usersCaption = document.getElementById("keyword-users-caption");
+        const treatmentsCaption = document.getElementById("keyword-treatments-caption");
+
+        posts.innerHTML = `
+          <div class="keyword-empty">
+            <p>Ranked post results will appear here after the first API search completes.</p>
+          </div>
+        `;
+        users.innerHTML = `
+          <div class="keyword-empty">
+            <p>Ranked users will appear here after the first API search completes.</p>
+          </div>
+        `;
+        treatments.innerHTML = `
+          <div class="keyword-empty">
+            <p>Top treatments for the matched users will appear here after the server returns cohort data.</p>
+          </div>
+        `;
+        postsCaption.textContent = "waiting for API search";
+        usersCaption.textContent = "ranked from the current cohort";
+        treatmentsCaption.textContent = "needs /api/keyword-search";
+      }
+
+      function renderKeywordExplorer() {
+        renderKeywordQueryList();
+        renderKeywordPresets();
+        const posts = document.getElementById("keyword-post-list");
+        const users = document.getElementById("keyword-user-list");
+        const treatments = document.getElementById("keyword-treatment-list");
+        const postsCaption = document.getElementById("keyword-posts-caption");
+        const usersCaption = document.getElementById("keyword-users-caption");
+        const treatmentsCaption = document.getElementById("keyword-treatments-caption");
+
+        if (!keywordLastResults) {
+          renderInitialState();
+          return;
+        }
+
+        users.innerHTML = keywordLastResults.ranked_users.length
+          ? keywordLastResults.ranked_users
+              .map(
+                (user) => `
+                  <article class="keyword-user-card ${selectedUserId === user.user_id ? "selected" : ""}" data-ranked-user="${user.user_id}">
+                    <div class="keyword-user-head">
+                      <div>
+                        <strong>${escapeHtml(formatUserLabel(user.user_id))}</strong>
+                      </div>
+                    </div>
+                    <div class="keyword-user-meta">
+                      <span class="pill response">${user.treatment_reports} treatment reports</span>
+                      <span class="pill response">${user.diagnoses} diagnoses</span>
+                      <span class="pill response">first post ${formatTimestamp(user.first_post_date)}</span>
+                      <span class="pill response">${user.total_posts} posts</span>
+                    </div>
+                    <p><strong>Dx:</strong> ${escapeHtml(summarizeTerms(user.diagnosis_terms))}</p>
+                    <p><strong>Tx:</strong> ${escapeHtml(summarizeTerms(user.treatment_terms))}</p>
+                  </article>
+                `
+              )
+              .join("")
+          : `
+              <div class="keyword-empty">
+                <p>No ranked users are available for this cohort yet.</p>
+              </div>
+            `;
+
+        users.querySelectorAll("[data-ranked-user]").forEach((card) => {
+          card.addEventListener("click", async () => {
+            const clickedUserId = card.dataset.rankedUser;
+            selectedUserId = selectedUserId === clickedUserId ? null : clickedUserId;
+            selectedUserPosts = null;
+            renderKeywordExplorer();
+            if (selectedUserId) {
+              await loadUserPosts(selectedUserId);
+            }
+          });
+        });
+
+        const displayedPosts = selectedUserId ? selectedUserPosts?.posts || [] : keywordLastResults.posts;
+        posts.innerHTML = displayedPosts.length
+          ? renderPostCards(displayedPosts)
+          : selectedUserId
+            ? `
+                <div class="keyword-empty">
+                  <p>${selectedUserPosts ? "No matched posts were returned for this user." : "Loading matched posts for the selected user..."}</p>
+                </div>
+              `
+            : `
+                <div class="keyword-empty">
+                  <p>No posts match the current query. Add broader include terms or remove restrictive exclusions.</p>
+                </div>
+              `;
+
+        treatments.innerHTML = keywordLastResults.top_treatments.length
+          ? keywordLastResults.top_treatments
+              .map(
+                (item) => `
+                  <div class="keyword-treatment-row">
+                    <div class="keyword-treatment-head">
+                      <div>
+                        <div class="pill ${supportTierClass(item.support)}" style="width: fit-content; margin-bottom: 8px;">${item.support}</div>
+                        <strong>${escapeHtml(item.name)}</strong>
+                        <p>${item.side_effects.length ? `Common side effects: ${escapeHtml(item.side_effects.join(", "))}` : "No common side effects surfaced in the top rollup."}</p>
+                      </div>
+                      <div class="keyword-treatment-score">
+                        <strong>${item.pct_positive}%</strong>
+                        <span>positive</span>
+                      </div>
+                    </div>
+                    <div class="keyword-treatment-stats">
+                      <span class="pill response">${item.unique_users} users</span>
+                      <span class="pill response">${item.reports} reports</span>
+                      <span class="pill response">${item.positive} positive</span>
+                      <span class="pill response">${item.negative} negative</span>
+                      <span class="pill response">${item.mixed} mixed</span>
+                      <span class="pill response">score ${item.normalized_score.toFixed(2)}</span>
+                    </div>
+                  </div>
+                `
+              )
+              .join("")
+          : `
+              <div class="keyword-empty">
+                <p>No displayable treatments cleared the support threshold for this cohort yet.</p>
+              </div>
+            `;
+
+        postsCaption.textContent = selectedUserId
+          ? `${escapeHtml(formatUserLabel(selectedUserId))} · ${displayedPosts.length.toLocaleString()} matched posts`
+          : `${keywordLastResults.counts.matched_posts.toLocaleString()} posts ranked from ${escapeHtml(keywordLastResults.source)}`;
+        usersCaption.textContent = `${keywordLastResults.ranked_users.length.toLocaleString()} users ranked from the current cohort`;
+        treatmentsCaption.textContent = `${keywordLastResults.counts.matched_users.toLocaleString()} matched users drive this treatment rollup`;
+      }
+
+      async function loadUserPosts(userId) {
+        try {
+          selectedUserPosts = await apiFetch("/api/user-posts", {
+            method: "POST",
+            body: JSON.stringify({
+              user_id: userId,
+              terms: keywordQuery,
+              post_limit: 12
+            })
+          });
+          renderKeywordExplorer();
+        } catch (error) {
+          setKeywordStatus(`User post fetch failed: ${escapeHtml(formatApiErrorMessage(error.message || "Request failed."))}`);
+        }
+      }
+
+      async function runKeywordSearch() {
+        renderKeywordQueryList();
+
+        if (!keywordQuery.length) {
+          keywordLastResults = null;
+          selectedUserId = null;
+          selectedUserPosts = null;
+          renderInitialState();
+          setKeywordStatus("Add at least one term to run a weighted search.");
+          return;
+        }
+
+        const searchToken = ++activeSearchToken;
+        setKeywordStatus("Searching patientpunk.db through the API...");
+
+        try {
+          const results = await apiFetch("/api/keyword-search", {
+            method: "POST",
+            body: JSON.stringify({
+              terms: keywordQuery,
+              post_limit: 16,
+              treatment_limit: 8,
+              min_treatment_users: 5
+            })
+          });
+
+          if (searchToken !== activeSearchToken) return;
+
+          keywordLastResults = results;
+          selectedUserId = null;
+          selectedUserPosts = null;
+
+          renderKeywordExplorer();
+          setKeywordStatus(
+            `${escapeHtml(results.source)} · ${results.counts.matched_posts.toLocaleString()} matched posts · ${results.counts.matched_users.toLocaleString()} matched users`
+          );
+        } catch (error) {
+          keywordLastResults = null;
+          selectedUserId = null;
+          selectedUserPosts = null;
+          renderInitialState();
+          const message = formatApiErrorMessage(error.message || "Search failed.");
+          if (message.includes("Failed to fetch")) {
+            setKeywordStatus(
+              `Could not reach the search API. Start the server with <code>uvicorn search_api.app:app --reload</code> and open this page from that server.`
+            );
+          } else {
+            setKeywordStatus(`Search failed: ${escapeHtml(message)}`);
+          }
+        }
+      }
+
+      async function initializeKeywordExplorer() {
+        renderInitialState();
+
+        try {
+          keywordMetadata = await apiFetch("/api/metadata");
+          renderInitialState();
+          setKeywordStatus("Add at least one term to start building a cohort.");
+        } catch (error) {
+          setKeywordStatus(
+            `Could not reach the search API. Start the server with <code>uvicorn search_api.app:app --reload</code> and open this page from that server.`
+          );
+        }
+      }
+
+      document.getElementById("keyword-add-btn").addEventListener("click", async () => {
+        const didAdd = addKeywordTerm(
+          document.getElementById("keyword-term-input").value,
+          document.getElementById("keyword-weight-input").value
+        );
+        if (didAdd) {
+          await runKeywordSearch();
+        }
+      });
+
+      document.getElementById("keyword-term-input").addEventListener("keydown", async (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          const didAdd = addKeywordTerm(
+            document.getElementById("keyword-term-input").value,
+            document.getElementById("keyword-weight-input").value
+          );
+          if (didAdd) {
+            await runKeywordSearch();
+          }
+        }
+      });
+
+      document.getElementById("keyword-reset-btn").addEventListener("click", async () => {
+        keywordQuery = defaultQuery.map((item) => ({ ...item }));
+        await runKeywordSearch();
+      });
+
+      initializeKeywordExplorer();
+    </script>
+  </body>
+</html>

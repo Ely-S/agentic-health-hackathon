@@ -12,6 +12,52 @@ patient-authored Reddit data, with cluster and comorbidity visualizations on top
 
 ---
 
+## Local install and run
+
+This repo now includes a shareable local app layout:
+
+- `backend/` FastAPI API
+- `frontend/` static HTML pages
+- `patientpunk.db` and `posts.db` in the repo root
+
+### Prerequisites
+
+- Python 3.9+
+
+### Install
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -e .
+```
+
+### Run
+
+```bash
+uvicorn backend.search_api.app:app --reload
+```
+
+Open:
+
+- `http://127.0.0.1:8000/weighted_keyword_explorer.html`
+- `http://127.0.0.1:8000/docs`
+
+Quick health check:
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+Expected response:
+
+```json
+{"status":"ok","database":"patientpunk.db"}
+```
+
+---
+
 ## What we are building (this hackathon)
 
 A "find patients like me → see what worked for them" experience:

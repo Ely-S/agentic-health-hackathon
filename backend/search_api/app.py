@@ -1,0 +1,80 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, RedirectResponse
+
+from backend.search_api.models import (
+    KeywordSearchRequest,
+    KeywordSearchResponse,
+    MetadataResponse,
+    PostDetailResponse,
+    UserPostsRequest,
+    UserPostsResponse,
+)
+from backend.search_api.service import get_metadata, get_post_detail, get_user_posts, keyword_search
+from backend.shared_db import BASE_DIR, DB_PATH
+
+
+FRONTEND_DIR = BASE_DIR.parent / "frontend"
+WEIGHTED_PAGE = FRONTEND_DIR / "weighted_keyword_explorer.html"
+PROTOTYPE_PAGE = FRONTEND_DIR / "subtype_explorer_prototype.html"
+
+app = FastAPI(
+    title="PatientPunk Weighted Search API",
+    version="0.1.0",
+    description="Server-backed weighted keyword search over the PatientPunk SQLite corpus.",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/", include_in_schema=False)
+def root() -> RedirectResponse:
+    return RedirectResponse(url="/weighted_keyword_explorer.html")
+
+
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "ok", "database": DB_PATH.name}
+
+
+@app.get("/api/metadata", response_model=MetadataResponse)
+def api_metadata() -> MetadataResponse:
+    return get_metadata()
+
+
+@app.post("/api/keyword-search", response_model=KeywordSearchResponse)
+def api_keyword_search(request: KeywordSearchRequest) -> KeywordSearchResponse:
+    return keyword_search(request)
+
+
+@app.post("/api/user-posts", response_model=UserPostsResponse)
+def api_user_posts(request: UserPostsRequest) -> UserPostsResponse:
+    return get_user_posts(request.user_id, request.terms, post_limit=request.post_limit)
+
+
+@app.get("/api/post/{post_id}", response_model=PostDetailResponse)
+def api_post_detail(post_id: str) -> PostDetailResponse:
+    post = get_post_detail(post_id)
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return post
+
+
+@app.get("/weighted_keyword_explorer.html", include_in_schema=False)
+def weighted_keyword_explorer() -> FileResponse:
+    return FileResponse(WEIGHTED_PAGE)
+
+
+@app.get("/subtype_explorer_prototype.html", include_in_schema=False)
+def subtype_explorer_prototype() -> FileResponse:
+    return FileResponse(PROTOTYPE_PAGE)
