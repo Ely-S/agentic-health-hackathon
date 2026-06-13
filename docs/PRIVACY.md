@@ -33,10 +33,13 @@ not, materially, and we take steps to keep it that way.
   precise addresses, no account metadata**. "Location" fields are only the
   country/state a user *chose to state publicly* in a post.
 - **Controlled access (defense in depth).** The assembled data (`patientpunk.db`, raw
-  text, intermediates) is **never** placed in this public repository. It lives in
-  controlled S3 storage and is shared via **time-limited presigned links / on request**.
-  Public, permanent, crawlable surfaces are deliberately avoided. This repo contains only
-  *descriptions* of the data (codebooks, summary statistics).
+  text, intermediates) is **never committed** to this public repository. It lives in
+  controlled S3 storage and is shared via **time-limited presigned links**. During active
+  judging a single such link to the database is published in the README so judges can
+  evaluate without an access request; it is **time-limited (expires within 7 days) and
+  revoked afterward**. The data itself never enters git history, and no permanent public
+  copy is created. This repo otherwise contains only *descriptions* of the data (codebooks,
+  summary statistics).
 - **De-identified-by-default artifacts.** The codebooks and summary statistics published
   here are **aggregate** — counts, coverage, category labels — with no per-patient rows
   and no free text.

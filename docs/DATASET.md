@@ -116,8 +116,16 @@ This is a deliberate **data-hygiene + privacy** decision (and it's enforced in
 <a name="getting-the-data"></a>
 ## Getting the data (for judges / collaborators)
 
-The dataset is available on request as a **time-limited presigned download link** to the
-controlled S3 bucket — covering `patientpunk.db`, the schema, and (optionally) the
-intermediate corpora. Ask a project maintainer for a link; they expire (max 7 days) and
-can be regenerated. The links require no AWS account and grant read-only access to those
-specific files only.
+The dataset is available as a **time-limited presigned download link** to the controlled
+S3 bucket. These links require no AWS account, grant **read-only** access to those specific
+files only, expire (max 7 days), and can be regenerated.
+
+**During judging**, a live link to the consolidated database is published in the
+[README](../README.md#data-access--and-why-no-data-is-in-this-repo):
+
+- **[`patientpunk.db`](https://patientpunk.s3.amazonaws.com/6_11_hackathon/patientpunk.db?AWSAccessKeyId=AKIARSUMMLJYCRACXQFL&Signature=hQZoH953gXF1GZ%2B7Q3gs0GJqu%2Fw%3D&Expires=1781981089)**
+  — 37 MB SQLite, the consolidated database. **Expires ~2026-06-20; revoked after judging.**
+
+The schema (`schema.sql`, `promoted_schema.json`) and intermediate corpora (raw slice,
+per-patient records, sentiment intermediates) are available on request — ask a maintainer
+for a presigned link.

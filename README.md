@@ -109,7 +109,13 @@ This keeps the per-patient data out of public, crawlable, permanent surfaces whi
 letting judges and collaborators inspect exactly what the data is (via the codebook and
 summary stats here) and obtain it through a controlled channel.
 
-> Need the dataset for evaluation? Request a presigned link — see
+> **📦 For judges — download the dataset (time-limited):**
+> **[`patientpunk.db`](https://patientpunk.s3.amazonaws.com/6_11_hackathon/patientpunk.db?AWSAccessKeyId=AKIARSUMMLJYCRACXQFL&Signature=hQZoH953gXF1GZ%2B7Q3gs0GJqu%2Fw%3D&Expires=1781981089)**
+> — 37 MB SQLite, the consolidated database (structured variables + drug sentiment +
+> the source `posts` text). This is a **presigned, time-limited link that expires
+> ~2026-06-20 and will be revoked after judging**; during that window it is downloadable
+> by anyone with this README. Intermediate files (raw slice, per-patient records,
+> sentiment intermediates) are available on request — see
 > [`docs/DATASET.md`](docs/DATASET.md#getting-the-data).
 
 ---
