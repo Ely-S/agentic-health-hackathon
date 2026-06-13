@@ -1187,20 +1187,15 @@
           <section id="treatment-mode" class="mode-panel active">
             <div class="section-head">
               <h2>Treatment Evidence</h2>
-              <span>ranked by support tier, weighted signal, and unique-patient count</span>
+              <span>drug classes ranked by predicted chance of a positive experience for your profile</span>
             </div>
 
             <div class="toolbar">
               <div class="left">
-                <span class="pill support-high">Support Tier: High+</span>
-                <span class="pill warning">Exclude already tried</span>
-                <div class="select" style="min-width: 240px; padding: 10px 12px;">
-                  <span>Target symptom: brain fog</span>
-                  <span>▾</span>
-                </div>
+                <span class="pill support-high">Sorted by predicted positive %</span>
               </div>
               <div class="right">
-                <span class="pill support-medium">POTS + MCAS slice</span>
+                <span class="pill support-medium" id="tp-slice">your cohort</span>
               </div>
             </div>
 
@@ -1350,6 +1345,10 @@
           set("hero-matched", (window.EVIDENCE.matched_patients || 0).toLocaleString());
           set("hero-quoteable", (window.EVIDENCE.quoteable || 0).toLocaleString());
           set("sx-condcount", conds.length);
+          const slice = (window.EVIDENCE.profile && window.EVIDENCE.profile.length)
+            ? window.EVIDENCE.profile.join(" + ") + " slice"
+            : "all patients";
+          set("tp-slice", slice);
           const dx = document.getElementById("dx-summary");
           if (dx) dx.innerHTML = `<strong>${(window.COMORBIDITY.cohort_size || 0).toLocaleString()}</strong> patients share your conditions · enrichment vs <strong>${(window.COMORBIDITY.population || 0).toLocaleString()}</strong> total`;
           renderTreatmentCards();
