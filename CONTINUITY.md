@@ -60,11 +60,25 @@ and open questions. Unlike code, this file is meant to be **written to often**.
 - Audited 88 labels vs source text: DeepSeek **over-calls POSITIVE** (~20–25%: uncredited multi-drug "stack" mentions, aspirational/just-started, and no-effect → positive). **Differential by drug** (supplements worst). Negatives audited **clean**.
 - Root cause: the classifier prompt's stack rule (`positive/weak` for any drug named in a "helped" stack) + no `neutral`/`no_effect` class.
 - **Fix A (stopgap, applied):** drop `positive/weak` → `drug_sentiment_clean.csv` (in `cleaned_v2/`). ~0 power cost (negatives, the bottleneck, untouched).
-- **Fix B (re-run, done 2026-06-13 — NOT yet validated/adopted):** corrected prompt + full reclassify → `pp_rebase/posts_rerun.db`. New 5-class counts: positive **5,836** (was 7,463), negative **1,357** (now harm-only), **no_effect 1,094** (new), mixed 804, ~740 → neutral/dropped. Yellow flag: `mixed` tripled (282→804) — sanity-check before adopting. Prompt edits: `pp_rebase/src/prompts/intervention_config.py`, `src/models.py`, `src/pipeline/classify.py`.
+- **Fix B (re-run — VALIDATED + ADOPTED 2026-06-13):** corrected prompt + full reclassify →
+  `pp_rebase/posts_rerun.db`. 5-class: positive **5,836** (was 7,463), negative **1,357** (harm-only),
+  **no_effect 1,094** (new), mixed 804, ~740 dropped. Validation: of the old `positive/weak` stratum,
+  **59% correctly moved out** of positive. **CAVEAT: `mixed` is over-inflated** (~⅓ neutrals, ~¼
+  partials-that-should-be-positive) → treat `mixed` as exclude; pos/neg/no_effect are clean.
+  **Adopted into S3 `cleaned_v2/`** as the 5-class `drug_sentiment.csv`. Prompt edits:
+  `pp_rebase/src/prompts/intervention_config.py`, `src/models.py`, `src/pipeline/classify.py`.
 
 **Data locations:** cleaned/corrected bundle → `s3://patientpunk/6_11_hackathon/cleaned_v2/`; source DB → `6_11_hackathon/patientpunk.db`; re-run output → `pp_rebase/posts_rerun.db` (local, not yet on S3).
 
-**Open / current task:** per-drug-category **logit models** (`P(success | patient conditions)`, one per defined drug group). Decisions pending: (1) build on the re-run data (richer — `no_effect` gives a proper "didn't work" denominator) after validating it, vs `drug_sentiment_clean.csv` now; (2) predictors = conditions + severity, **DROP `symptom_trajectory`** (outcome-adjacent → reverse causation); (3) some drug categories are power-limited (won't yield a stable logit).
+**Per-drug-category logit models — DONE** (`scripts/treatment_logit_rerun.py` →
+`cleaned_v2/drug_logit_coefficients.csv` + `drug_logit_report.txt`). One logit per category on the
+re-run data: `P(helped) ~ conditions + severity` (helped=positive vs negative+no_effect; mixed
+dropped; `symptom_trajectory` excluded as outcome-adjacent). Robust (p<0.05): **LDN→fibromyalgia
+(OR~5)**, supplement→ME/CFS failure, autonomic→POTS success / MCAS+PEM failure, severe-status→failure
+broadly. neuro-psych→EDS attenuated per-category (underpowered unpooled; the pooled model showed it).
+
+**Next:** the similarity / "patients-like-me" app layer; optionally regenerate the pooled +
+heterogeneity descriptives on the re-run 5-class data (they were on the old sentiment).
 
 ## Hard rules / conventions (don't break these)
 1. **NO patient data in this repo — ever.** No `.db`, no raw `.json`/`.csv` of patient text
