@@ -12,6 +12,7 @@ from .models import (
     KeywordSearchResponse,
     MetadataResponse,
     PostDetailResponse,
+    PractitionerMention,
     RankedPost,
     RankedUser,
     SearchCounts,
@@ -511,6 +512,47 @@ def _top_cohort_suggestions(
     return suggestions
 
 
+def _top_practitioners(
+    con: sqlite3.Connection,
+    terms: list[WeightedTerm],
+    *,
+    limit: int = 8,
+    min_users: int = 2,
+) -> list[PractitionerMention]:
+    cte, params, _, _, _, cohort_condition, _, _ = _build_scored_posts_cte(terms)
+    rows = con.execute(
+        f"""
+        {cte},
+        matched_users AS (
+          SELECT DISTINCT user_id
+          FROM scored_posts
+          WHERE {cohort_condition}
+        )
+        SELECT
+          pm.name,
+          COUNT(DISTINCT p.user_id) AS unique_users,
+          COUNT(*) AS mention_count
+        FROM post_practitioner_mentions pm
+        JOIN posts p ON p.post_id = pm.post_id
+        JOIN matched_users mu ON mu.user_id = p.user_id
+        GROUP BY pm.name
+        HAVING COUNT(DISTINCT p.user_id) >= ?
+        ORDER BY unique_users DESC, mention_count DESC
+        LIMIT ?
+        """,
+        params + [min_users, limit],
+    ).fetchall()
+
+    return [
+        PractitionerMention(
+            name=row["name"],
+            unique_users=int(row["unique_users"]),
+            mention_count=int(row["mention_count"]),
+        )
+        for row in rows
+    ]
+
+
 def keyword_search(request: KeywordSearchRequest) -> KeywordSearchResponse:
     with connect_sqlite(DB_PATH, row_factory=sqlite3.Row) as con:
         counts = _count_matches(con, request.terms)
@@ -524,6 +566,7 @@ def keyword_search(request: KeywordSearchRequest) -> KeywordSearchResponse:
             limit=request.treatment_limit,
         )
         top_cohort_suggestions = _top_cohort_suggestions(con, request.terms)
+        top_practitioners = _top_practitioners(con, request.terms)
 
     return KeywordSearchResponse(
         source=DB_PATH.name,
@@ -534,6 +577,7 @@ def keyword_search(request: KeywordSearchRequest) -> KeywordSearchResponse:
         ranked_users=ranked_users,
         top_treatments=top_treatments,
         top_cohort_suggestions=top_cohort_suggestions,
+        top_practitioners=top_practitioners,
     )
 
 
