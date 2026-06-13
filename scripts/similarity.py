@@ -81,7 +81,8 @@ def demo(name, conditions):
     for drug, r in dg.tail(4).sort_values("wrate").iterrows():
         print(f"     {r.wrate*100:3.0f}%  (n={int(r.n)})  {drug}")
 
-print("patients:", len(ids), "| cosine features:", len(FEAT), "| usable drug reports:", len(ds))
-demo("dysautonomia-spectrum", ["pots","mcas","dysautonomia"])
-demo("fatigue-spectrum",      ["me_cfs","pem"])
-demo("hypermobility-spectrum",["eds","pots","mcas"])
+if __name__ == "__main__":
+    print("patients:", len(ids), "| cosine features:", len(FEAT), "| usable drug reports:", len(ds))
+    demo("dysautonomia-spectrum", ["pots","mcas","dysautonomia"])
+    demo("fatigue-spectrum",      ["me_cfs","pem"])
+    demo("hypermobility-spectrum",["eds","pots","mcas"])
