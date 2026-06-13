@@ -285,3 +285,26 @@ the visualizations in case live rendering breaks.
 
   Packaging was merged rather than overwritten: the branch still installs `backend.*` for the
   FastAPI app and now also installs `agentic_health_hackathon.*` from `src/`.
+- **2026-06-13 - Codex (GPT-5): drug-category definitions.** The current broad drug
+  categories are practical regex groups for power and product display, not a formal
+  pharmacology ontology. Matching is first-match in script order, so a drug/intervention lands
+  in one broad category for a given model run. The individual-drug view in `scripts/similarity.py`
+  still keeps exact drug names.
+
+  | category | includes / examples | product interpretation |
+  |---|---|---|
+  | `antihistamine/mast-cell` | antihistamines; H1/H2 blockers; cetirizine, loratadine, fexofenadine, famotidine, diphenhydramine/Benadryl, hydroxyzine; cromolyn, ketotifen, quercetin; "mast cell"; nasal sprays in widened/rerun models | MCAS, histamine, allergy-style symptom management, and mast-cell stabilization |
+  | `autonomic/cardiovascular` | beta blockers; propranolol, metoprolol, bisoprolol, atenolol, nadolol; ivabradine/Corlanor; midodrine; fludrocortisone; salt, fluids, electrolytes, compression; guanfacine, clonidine, pyridostigmine/Mestinon in widened/rerun models | POTS, dysautonomia, orthostatic intolerance, tachycardia, blood pressure, or volume support |
+  | `neuro-psychiatric` | SSRIs/SNRIs; sertraline, fluoxetine, escitalopram, duloxetine, venlafaxine; Prozac, Zoloft, Lexapro, Cymbalta; Abilify/aripiprazole; benzodiazepines/Xanax; gabapentin, pregabalin; antidepressants, fluvoxamine, mirtazapine, amitriptyline, nortriptyline | nervous-system, mood, sleep, pain, cognition, sensory, or neuro-psych medication bucket |
+  | `LDN/immunomodulator` | naltrexone/LDN; prednisone/steroids; IVIG; rituximab; hydroxychloroquine; colchicine in most logit/pooled runs | immune modulation and anti-inflammatory treatment bucket, with LDN as the high-volume anchor |
+  | `antiviral/anticoagulant` | Paxlovid/nirmatrelvir; antiviral, valacyclovir/Valtrex, famciclovir; nattokinase, serrapeptase, aspirin, anticoagulants, apixaban, rivaroxaban; lumbrokinase and maraviroc in widened/rerun models | viral persistence/reactivation, clotting, anticoagulant, fibrinolytic, or antiviral bucket |
+  | `supplement/mitochondrial` | magnesium, CoQ10/coenzyme/ubiquinol, B12/methylcobalamin, B-complex, vitamin D, vitamin C, omega/fish oil, NAD/nicotinamide, creatine, carnitine, D-ribose, NAC, probiotics, iron, melatonin, thiamine, methylene blue, glutathione, CBD/cannabidiol, alpha-lipoic acid | supplements, mitochondrial support, nutritional support, sleep, or oxidative-stress support |
+  | `metabolic` | metformin; GLP-1 drugs; tirzepatide, semaglutide, Ozempic, Zepbound, Mounjaro; low-dose lithium in older predictive scripts | metabolic, insulin/glucose, weight-loss, or metabolism-related interventions |
+  | `peptide/experimental` | BPC-157, SS-31, thymosin, peptides, rapamycin/sirolimus | low-volume experimental or peptide-style interventions, often underpowered |
+  | `procedure/device` | nicotine patch, hyperbaric oxygen/HBOT, stellate ganglion block, acupuncture, vagus stimulation, red light, vaccine | non-oral procedure, device, stimulation, exposure, or intervention bucket |
+
+  Older descriptive scripts also have narrower categories such as `mast-cell stabilizer`,
+  `beta blocker`, `ivabradine`, `POTS volume (salt/fludro/midodrine)`, `SSRI/SNRI`,
+  `metformin`, `magnesium`, `CoQ10/mito`, `B12/B-complex`, `vitamin D`, and `LDA
+  (low-dose abilify)`. Treat those as fine-grained audit/reporting buckets. The broad
+  categories above are the current product-facing/logit categories.
