@@ -102,6 +102,20 @@ CLASS_FIT = {
 }
 
 
+# What each class is *usually* aimed at — used to keep the no-direct-fit message class-specific.
+CLASS_TYPICAL_FOR = {
+    "antihistamine/mast-cell": "MCAS and histamine-driven symptoms",
+    "autonomic/cardiovascular": "POTS and dysautonomia",
+    "neuro-psychiatric": "fibromyalgia, neuropathic pain, and sleep/mood",
+    "LDN/immunomodulator": "ME/CFS and fibromyalgia fatigue and pain",
+    "antiviral/anticoagulant": "post-viral crashes (PEM) and microclotting",
+    "supplement/mitochondrial": "fatigue and energy support",
+    "peptide/experimental": "experimental immune modulation and tissue repair",
+    "metabolic": "fatigue and metabolic dysfunction",
+    "procedure/device": "autonomic dysfunction in POTS/dysautonomia",
+}
+
+
 def _join_clauses(items: list[str]) -> str:
     if len(items) <= 1:
         return items[0] if items else ""
@@ -215,8 +229,9 @@ def explain(req: ExplainRequest) -> ExplainResponse:
     if fits:
         why = "For your profile, this class " + _join_clauses(fits) + "."
     elif keys:
-        why = ("For the conditions you selected there isn't a strong, direct mechanistic link — "
-               "the estimate below comes from how similar patients actually fared, not a targeted rationale.")
+        typical = CLASS_TYPICAL_FOR.get(req.category, "other presentations")
+        why = (f"This class is usually aimed at {typical} rather than the conditions you selected, so the "
+               "number below reflects how similar patients actually fared rather than a targeted rationale.")
     else:
         why = "Select your conditions to see how this class lines up with your specific phenotype."
     fb = (f"{drugword} {mech}. {why} The model puts the chance of a positive experience around "
