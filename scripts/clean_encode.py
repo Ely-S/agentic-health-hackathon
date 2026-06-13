@@ -114,6 +114,15 @@ REGEX_RULES = {
         (re.compile(r"declin|worsen|progressive|deteriorat|set.?back|getting worse"), "declining"),
         (re.compile(r"stable|persistent|permanent|plateau|unchanged|no improvement|not improv|not getting better|no change"), "stable"),
     ],
+    # one clean ordered ladder (mild < moderate < mobility_limited < housebound < bedbound);
+    # collapses the overlapping severity-adjective and functional-impairment values.
+    "functional_status_tier": [
+        (re.compile(r"bedbound|bedridden|bed.?bound|very severe|severely disabled"), "bedbound"),
+        (re.compile(r"moderate"), "moderate"),
+        (re.compile(r"housebound|homebound|house.?bound|\bsevere"), "housebound"),
+        (re.compile(r"mobility|wheelchair|rollator|walker|\bcane\b|scooter"), "mobility_limited"),
+        (re.compile(r"mild|mostly functional|mostly recovered|partially functional|working|functional|recovered"), "mild"),
+    ],
 }
 
 def normalize(field, val):

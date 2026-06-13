@@ -160,6 +160,8 @@ class PredictRequest(BaseModel):
 class TreatmentPrediction(BaseModel):
     category: str                 # drug-mechanism class (the model unit)
     p_positive: int               # predicted % chance of a positive experience for THIS profile
+    ci_lo: int                    # 95% CI lower bound (error bar) on p_positive
+    ci_hi: int                    # 95% CI upper bound (error bar) on p_positive
     baseline: int                 # predicted % for a patient with none of the modelled conditions
     delta: int                    # p_positive - baseline (how the profile shifts the odds)
     n: int                        # reports the model was fit on (support / confidence)

@@ -13,7 +13,7 @@ Reads re-run sentiment from pp_rebase/posts_rerun.db + patient features from dat
 Writes data/clean/drug_logit_rerun_report.txt + drug_logit_coefficients_rerun.csv.
 """
 from __future__ import annotations
-import re, sqlite3, warnings
+import json, re, sqlite3, warnings
 from pathlib import Path
 import numpy as np, pandas as pd
 import statsmodels.api as sm
@@ -31,7 +31,7 @@ for c in CONDS:
     col=f"conditions={c}"; P[c]= full[col].reindex(ctrl[KEY]).fillna(0).to_numpy() if col in full.columns else 0
 P["eds_any"]=ctrl["eds_any"].to_numpy()
 PREDS = CONDS+["eds_any"]
-for sev in ["functional_status_tier=severe","functional_status_tier=housebound","functional_status_tier=bedbound","functional_status_tier=mobility_limited"]:
+for sev in ["functional_status_tier=bedbound","functional_status_tier=housebound","functional_status_tier=mobility_limited","functional_status_tier=moderate"]:
     if sev in full.columns:
         nm=sev.replace("functional_status_tier=","func_"); P[nm]=full[sev].reindex(ctrl[KEY]).fillna(0).to_numpy(); PREDS.append(nm)
 P["nfields_z"]=((ctrl["n_fields_filled"]-ctrl["n_fields_filled"].mean())/ctrl["n_fields_filled"].std()).to_numpy()
@@ -57,6 +57,7 @@ W("PER-DRUG-CATEGORY LOGIT (re-run sentiment) — P(helped) ~ conditions + sever
 W("  outcome: success=positive | failure=negative+no_effect | mixed dropped. predictors a-priori")
 W(f"  total usable reports: {len(ds)} | overall helped-rate {ds.y.mean()*100:.0f}%\n")
 
+MODELS = {}
 for g in GROUPS:
     sub=ds[ds.group==g].drop_duplicates("user_id"); n=len(sub); y=sub.y.values
     ev=int(min(y.sum(),n-y.sum()))
@@ -83,6 +84,9 @@ for g in GROUPS:
     if not sel:
         W(f"  {g:28} n={n} ev={ev}  -> no stable model"); continue
     ci=m.conf_int()
+    _ord=["const"]+sel
+    MODELS[g]={"predictors":_ord,"beta":[float(m.params[p]) for p in _ord],
+               "cov":[[float(v) for v in r] for r in m.cov_params().loc[_ord,_ord].values],"n":int(n)}
     W(f"  {g}  (n={n}, helped {int(y.sum())}/{n}={y.mean()*100:.0f}%, fail-events {ev})")
     rows=[(p,np.exp(m.params[p]),np.exp(ci.loc[p,0]),np.exp(ci.loc[p,1]),m.pvalues[p]) for p in sel]
     for p,orr,lo,hi,pv in sorted(rows,key=lambda x:x[1]):
@@ -95,4 +99,5 @@ for g in GROUPS:
 W("  * p<0.05. outcome=helped vs (didn't help OR no effect). trajectory excluded (outcome-adjacent).")
 (CLEAN/"drug_logit_rerun_report.txt").write_text("\n".join(report),encoding="utf-8")
 pd.DataFrame(coef).to_csv(CLEAN/"drug_logit_coefficients_rerun.csv",index=False)
-print("\nwrote: data/clean/drug_logit_rerun_report.txt + drug_logit_coefficients_rerun.csv")
+json.dump(MODELS, open(CLEAN/"drug_logit_models.json", "w"))
+print("\nwrote: drug_logit_coefficients_rerun.csv + drug_logit_models.json (beta+cov for CIs)")
