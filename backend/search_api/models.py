@@ -105,6 +105,7 @@ class KeywordSearchResponse(BaseModel):
     ranked_users: list[RankedUser]
     top_treatments: list[TreatmentSummary]
     top_cohort_suggestions: list[CohortSuggestion]
+    top_practitioners: list[PractitionerMention]
 
 
 class PostDetailResponse(BaseModel):
@@ -132,6 +133,12 @@ class UserPostsRequest(BaseModel):
 class UserPostsResponse(BaseModel):
     user_id: str
     posts: list[RankedPost]
+
+
+class PractitionerMention(BaseModel):
+    name: str
+    unique_users: int
+    mention_count: int
 
 
 class MetadataResponse(BaseModel):

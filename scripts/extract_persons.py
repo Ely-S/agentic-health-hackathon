@@ -15,7 +15,7 @@ import re
 from collections import Counter
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent.parent / "posts.db"
+DB_PATH = Path(__file__).parent.parent / "patientpunk.db"
 SPACY_MODEL = "en_core_web_lg"
 
 PRACTITIONER_PATTERNS = re.compile(
@@ -96,28 +96,53 @@ def is_likely_practitioner(text: str, ent_start_char: int) -> bool:
     return bool(PRACTITIONER_PATTERNS.search(window))
 
 
-def save_to_db(db_path: Path, person_counter: Counter, practitioner_counter: Counter) -> None:
+def save_to_db(
+    db_path: Path,
+    person_counter: Counter,
+    practitioner_counter: Counter,
+    mentions: dict[str, list[str]],
+) -> None:
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     cur.executescript("""
         DROP TABLE IF EXISTS practitioner_names;
         CREATE TABLE practitioner_names (
-            name                TEXT PRIMARY KEY,
-            total_mentions      INTEGER NOT NULL DEFAULT 0,
+            name                  TEXT PRIMARY KEY,
+            total_mentions        INTEGER NOT NULL DEFAULT 0,
             practitioner_mentions INTEGER NOT NULL DEFAULT 0
         );
+
+        DROP TABLE IF EXISTS post_practitioner_mentions;
+        CREATE TABLE post_practitioner_mentions (
+            post_id TEXT NOT NULL REFERENCES posts(post_id),
+            name    TEXT NOT NULL REFERENCES practitioner_names(name),
+            PRIMARY KEY (post_id, name)
+        );
+        CREATE INDEX IF NOT EXISTS idx_ppm_name ON post_practitioner_mentions(name);
     """)
-    rows = [
+
+    name_rows = [
         (name, count, practitioner_counter.get(name, 0))
         for name, count in person_counter.most_common()
     ]
     cur.executemany(
         "INSERT INTO practitioner_names (name, total_mentions, practitioner_mentions) VALUES (?, ?, ?)",
-        rows,
+        name_rows,
     )
+
+    mention_rows = [
+        (post_id, name)
+        for post_id, names in mentions.items()
+        for name in names
+    ]
+    cur.executemany(
+        "INSERT OR IGNORE INTO post_practitioner_mentions (post_id, name) VALUES (?, ?)",
+        mention_rows,
+    )
+
     conn.commit()
     conn.close()
-    print(f"Saved {len(rows):,} records to practitioner_names table in {db_path}")
+    print(f"Saved {len(name_rows):,} names and {len(mention_rows):,} post-mention rows to {db_path}")
 
 
 def main():
@@ -132,6 +157,7 @@ def main():
 
     person_counter: Counter = Counter()
     practitioner_counter: Counter = Counter()
+    # post_id -> deduplicated list of names found
     mentions: dict[str, list[str]] = {}
 
     batch_size = 500
@@ -145,7 +171,8 @@ def main():
         docs = list(nlp.pipe([body for _, body in batch], batch_size=batch_size))
 
         for (post_id, body), doc in zip(batch, docs):
-            found = []
+            found: list[str] = []
+            seen_in_post: set[str] = set()
             for ent in doc.ents:
                 if ent.label_ != "PERSON":
                     continue
@@ -155,7 +182,9 @@ def main():
                 person_counter[name] += 1
                 if is_likely_practitioner(body, ent.start_char):
                     practitioner_counter[name] += 1
-                found.append(name)
+                if name not in seen_in_post:
+                    found.append(name)
+                    seen_in_post.add(name)
             if found:
                 mentions[post_id] = found
 
@@ -183,7 +212,7 @@ def main():
     print(f"\nFull results written to {out_path}")
 
     # Write to DB
-    save_to_db(DB_PATH, person_counter, practitioner_counter)
+    save_to_db(DB_PATH, person_counter, practitioner_counter, mentions)
 
 
 if __name__ == "__main__":
