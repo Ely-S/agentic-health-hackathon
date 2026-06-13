@@ -42,6 +42,73 @@ CLASS_PATTERNS = {
 }
 _CLASS_RX = {c: re.compile(p) for c, p in CLASS_PATTERNS.items()}
 
+# What each drug class does (mechanism), for the non-LLM explanation fallback.
+CLASS_MECHANISM = {
+    "antihistamine/mast-cell": "block histamine (H1/H2) and stabilize mast cells to dampen the mediator release behind flushing, hives, GI upset, and flares",
+    "autonomic/cardiovascular": "act on heart rate, blood volume, and vascular tone to blunt orthostatic intolerance and tachycardia",
+    "neuro-psychiatric": "modulate neurotransmitters and nerve signaling to target pain, sleep, mood, and autonomic regulation",
+    "LDN/immunomodulator": "aim to recalibrate immune and glial signaling (e.g. low-dose naltrexone), with reported effects on fatigue, pain, and inflammation",
+    "antiviral/anticoagulant": "target persistent viral activity or the microclotting and endothelial dysfunction implicated in some Long COVID",
+    "supplement/mitochondrial": "support cellular energy metabolism and correct common deficiencies that can worsen fatigue",
+    "peptide/experimental": "are investigational agents proposed to aid tissue repair and immune modulation, with mostly anecdotal evidence so far",
+    "metabolic": "act on glucose and metabolic pathways (e.g. metformin, GLP-1s), with emerging interest in fatigue and inflammation",
+    "procedure/device": "are non-drug interventions (e.g. stellate-ganglion block, hyperbaric oxygen, vagus-nerve stimulation) aimed at autonomic or hypoxic mechanisms",
+}
+# Why a class is (or isn't) mechanistically relevant to a SPECIFIC condition the patient selected.
+# Keyed by class -> UI condition key -> reason clause (reads after "this class ...").
+CLASS_FIT = {
+    "antihistamine/mast-cell": {
+        "mcas": "directly targets the mast-cell activation that defines your MCAS",
+        "pots": "can ease POTS because histamine-driven vasodilation worsens orthostatic symptoms",
+        "dysautonomia": "may help because mast-cell mediators can aggravate autonomic instability",
+    },
+    "autonomic/cardiovascular": {
+        "pots": "is the core of POTS management — controlling heart rate and supporting blood volume",
+        "dysautonomia": "directly addresses your autonomic dysregulation",
+        "mcas": "covers the cardiovascular symptoms that overlap MCAS",
+    },
+    "neuro-psychiatric": {
+        "fibromyalgia": "includes first-line fibromyalgia agents (e.g. duloxetine, low-dose amitriptyline) for pain and sleep",
+        "small_fiber_neuropathy": "includes gabapentinoids and SNRIs used for neuropathic pain",
+        "me_cfs": "can target the pain, unrefreshing sleep, and dysregulation seen in ME/CFS",
+    },
+    "LDN/immunomodulator": {
+        "me_cfs": "centers on low-dose naltrexone, one of the most-reported options for ME/CFS fatigue and pain",
+        "fibromyalgia": "has a small evidence base for fibromyalgia pain",
+        "pem": "is reported by some to reduce post-exertional symptom burden",
+    },
+    "antiviral/anticoagulant": {
+        "pem": "targets the viral-persistence and microclot hypotheses linked to crashes",
+        "me_cfs": "aims at the post-viral mechanisms some associate with ME/CFS",
+    },
+    "supplement/mitochondrial": {
+        "me_cfs": "addresses the energy-metabolism deficits central to ME/CFS fatigue",
+        "pem": "aims at the cellular energy failure implicated in post-exertional crashes",
+        "fibromyalgia": "covers supplements (e.g. magnesium) commonly tried for fibromyalgia symptoms",
+    },
+    "peptide/experimental": {
+        "mcas": "is tried experimentally for immune modulation in MCAS",
+        "me_cfs": "is tried experimentally for fatigue and tissue repair in ME/CFS",
+    },
+    "metabolic": {
+        "me_cfs": "is being explored for the fatigue and inflammation seen in ME/CFS",
+        "pem": "is of interest for the metabolic dysfunction behind crashes",
+    },
+    "procedure/device": {
+        "pots": "includes stellate-ganglion block and vagus-nerve approaches that target autonomic dysfunction in POTS",
+        "dysautonomia": "aims directly at autonomic regulation",
+        "me_cfs": "includes HBOT and vagal approaches tried for ME/CFS fatigue",
+    },
+}
+
+
+def _join_clauses(items: list[str]) -> str:
+    if len(items) <= 1:
+        return items[0] if items else ""
+    if len(items) == 2:
+        return f"{items[0]}, and {items[1]}"
+    return ", ".join(items[:-1]) + f", and {items[-1]}"
+
 
 def _cohort_users(con: sqlite3.Connection, conditions: list[str]) -> set[str]:
     likes = [f"%{p}%" for c in conditions for p in COND_LIKE.get(str(c).lower(), [])]
@@ -137,7 +204,22 @@ def explain(req: ExplainRequest) -> ExplainResponse:
     text = _llm(prompt)
     if text:
         return ExplainResponse(category=req.category, text=text, source="llm")
-    fb = (f"{req.category} (e.g. {samples}). For a profile of {profile}, the model estimates ~{pct}% "
-          f"chance of a positive experience" + (f", driven by {drivers}." if drivers else ".") +
-          " This reflects self-reported lived experience, not clinical efficacy — discuss with a clinician.")
+
+    # Slice-aware deterministic fallback (no LLM key): combine the class mechanism with why it
+    # fits the SPECIFIC conditions selected, so the text differs per profile, not just per drug.
+    keys = [str(c).strip().lower() for c in req.conditions]
+    mech = CLASS_MECHANISM.get(req.category, "act through several proposed mechanisms")
+    fitmap = CLASS_FIT.get(req.category, {})
+    fits = [fitmap[k] for k in keys if fitmap.get(k)]
+    drugword = f"These ({samples})" if samples else "Drugs in this class"
+    if fits:
+        why = "For your profile, this class " + _join_clauses(fits) + "."
+    elif keys:
+        why = ("For the conditions you selected there isn't a strong, direct mechanistic link — "
+               "the estimate below comes from how similar patients actually fared, not a targeted rationale.")
+    else:
+        why = "Select your conditions to see how this class lines up with your specific phenotype."
+    fb = (f"{drugword} {mech}. {why} The model puts the chance of a positive experience around "
+          f"{pct}%" + (f", most influenced by {drivers}" if drivers else "") + ". "
+          "This is lived-experience signal, not clinical proof — discuss any change with a clinician.")
     return ExplainResponse(category=req.category, text=fb, source="fallback")

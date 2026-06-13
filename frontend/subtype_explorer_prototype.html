@@ -1339,12 +1339,27 @@
         if (btn) { btn.textContent = "Finding…"; btn.disabled = true; }
         try {
           const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(window.SX_PROFILE) };
-          const [evRes, coRes] = await Promise.all([
-            fetch("/api/treatment-evidence", opts),
-            fetch("/api/comorbidity", opts),
+          // Retry transient network failures (e.g. server restarting) before giving up.
+          const getJson = async (url) => {
+            let lastErr;
+            for (let attempt = 0; attempt < 3; attempt++) {
+              try {
+                const res = await fetch(url, opts);
+                if (!res.ok) throw new Error(url + " → HTTP " + res.status);
+                return await res.json();
+              } catch (err) {
+                lastErr = err;
+                if (attempt < 2) await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+              }
+            }
+            throw lastErr;
+          };
+          const [ev, co] = await Promise.all([
+            getJson("/api/treatment-evidence"),
+            getJson("/api/comorbidity"),
           ]);
-          window.EVIDENCE = await evRes.json();
-          window.COMORBIDITY = await coRes.json();
+          window.EVIDENCE = ev;
+          window.COMORBIDITY = co;
           const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
           set("sx-matched", (window.EVIDENCE.matched_patients || 0).toLocaleString());
           set("sx-quoteable", (window.EVIDENCE.quoteable || 0).toLocaleString());
@@ -1361,7 +1376,15 @@
           renderDiagnosisCards();
           renderDrawer();
         } catch (e) {
-          alert("Failed to load evidence: " + e);
+          const cards = document.getElementById("treatment-cards");
+          if (cards) {
+            cards.innerHTML =
+              '<div class="subtle-card"><p><strong>Couldn’t reach the analysis server.</strong> ' +
+              "It may be starting up — give it a moment. " +
+              '<button class="button primary" id="sx-retry" style="margin-left:8px">Retry</button></p></div>';
+            const rb = document.getElementById("sx-retry");
+            if (rb) rb.addEventListener("click", sxLoadEvidence);
+          }
         } finally { if (btn) { btn.textContent = orig; btn.disabled = false; } }
       }
 
