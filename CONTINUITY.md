@@ -23,6 +23,12 @@ and open questions. Unlike code, this file is meant to be **written to often**.
   tool, plus cluster / comorbidity / diagnosis visualizations. See `README.md`.
 - **The data:** `docs/DATASET.md` (source + structure), `docs/CODEBOOK.md` (fields + stats),
   `docs/PRIVACY.md` (anonymization + risk).
+- **★ CLEANED/CORRECTED ANALYSIS DATA (use this):** `s3://patientpunk/6_11_hackathon/cleaned_v2/`
+  — verbosity-controlled patient matrix (kNN-ready), corrected `drug_sentiment_clean.csv`
+  (`positive/weak` dropped — the sentiment over-call fix), `eds_any`, codebook, per-drug efficacy
+  coeffs, and analysis reports. Read its `README.md` first. A full sentiment re-run (cleaner,
+  5-class) is in progress and will replace `drug_sentiment_clean.csv`. **Trust contraindication
+  (negative) signals over "success" positives.** Ask a maintainer for a presigned link.
 - **Upstream:** the dataset + extraction pipeline come from PatientPunk
   (<https://github.com/Ely-S/PatientPunk>). We build the *app* on top.
 
