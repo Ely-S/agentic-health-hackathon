@@ -216,3 +216,51 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ============================================================================
+# DATA HYGIENE — patient / raw data NEVER goes in this repo.
+# It lives in CONTROLLED S3 (presigned access). This repo holds only code, docs,
+# codebooks, and AGGREGATE statistics. See docs/PRIVACY.md.
+# Codebooks / summary CSVs are allowed ONLY under docs/.
+# ============================================================================
+# Databases (patient / corpus)
+*.db
+*.sqlite
+*.sqlite3
+# Data serialization formats
+*.ndjson
+*.parquet
+*.feather
+*.arrow
+*.pkl
+*.pickle
+*.h5
+*.zip
+*.tar.gz
+# Raw corpus + pipeline dumps (json data — named, since *.json must stay legal for config)
+subreddit_posts.json
+tagged_mentions.json
+canonicalized_mentions.json
+records*.json
+*_records_*.json
+# Per-patient / raw exports
+records*.csv
+patients_wide.csv
+variables_long.csv
+drug_sentiment.csv
+conditions.csv
+demographics.csv
+# Data / output directories
+data/
+raw/
+output*/
+**/temp/
+# Block ALL csv/tsv by default; only curated codebooks/aggregates in docs/ are allowed
+*.csv
+*.tsv
+!docs/*.csv
+
+# Frontend (a hackathon app may add a JS UI)
+node_modules/
+.next/
+.DS_Store
