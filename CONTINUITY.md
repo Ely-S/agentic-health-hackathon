@@ -69,11 +69,18 @@ the visualizations in case live rendering breaks.
 
 ## Open questions / TODO
 - [ ] Clean up the data (owner: Shaun). [ ] Investigate sub-typing (owner: Eli).
-- [ ] **Similarity method** — which fields, what encoding (presence vs value-level), what
-  distance? **Heads-up landmine:** at the dataset level, the "obvious" patient clustering is
-  partly a **verbosity artifact** — patients who write more look more similar (more fields
-  filled), independent of phenotype. Control for this (e.g. restrict to patients with ≥N
-  fields, or normalize) or your "similar patients" will just be "wordy patients."
+- [x] **Verbosity confound — RESOLVED (2026-06-13).** Presence encoding is verbosity-driven
+  (PC1↔n_fields_filled r=**+0.95**). Fix: analysis-grade fields → IDF-weight → **L2-normalize
+  (cosine)** drops it to r=**+0.02** (leakage η² 0.63→0.03). The **L2/cosine** step is the
+  lever (removes vector magnitude = the 1-count = verbosity); IDF alone doesn't. Use
+  `data/clean/model_matrix_controlled.csv`; see `scripts/verbosity_control.py` + notes log.
+- [ ] **Similarity method** — with verbosity controlled, **hard clustering is weak**: best
+  k=2 just splits "explicitly stated long_covid+covid" (n=589) vs the comorbidity-rich rest
+  (n=3,777); silhouette ~0.4 but for a *labeling* reason, not phenotype. The conditions overlap
+  as a **continuum, not discrete clusters** (the long_covid↔POTS↔MCAS↔dysautonomia↔EDS↔ME/CFS
+  web). **Implication: for "patients like me" use nearest-neighbor SIMILARITY on the controlled
+  cosine matrix — not hard cluster labels.** Open: distance/k for kNN; whether to soft-cluster
+  or LLM-impute (yes/no/unknown) to sharpen subtypes.
 - [ ] **Treatment ranking** — weight by patient similarity? How to handle the
   positive-reporting bias and small-n drugs (366 drugs have ≥5 reports; many have 1–2)?
 - [ ] **Normalization** — condition/drug free-text is high-cardinality (e.g. mcas vs "mast
@@ -116,3 +123,21 @@ the visualizations in case live rendering breaks.
   fields (EDS ← `conditions` + `connective_tissue_symptoms`; likely also MCAS, dysautonomia,
   SFN). The codebook's per-field counts (EDS 81) are correct *for the conditions field* but
   understate true prevalence — account for this when the app computes condition prevalence.
+- **2026-06-13 — Claude (Opus, w/ Shaun): verbosity confound CONTROLLED + hard-clustering finding.**
+  Built `scripts/clean_encode.py` (multi-hot encode all 95 fields → `data/clean/model_matrix.csv`,
+  4,366×1,374, + `column_manifest.csv`) and `scripts/verbosity_control.py`.
+  **Verbosity:** presence encoding PC1↔n_fields_filled r=**+0.95** (clusters = verbose vs terse).
+  Controlled rep = analysis-grade fields → IDF → **L2/cosine** → r=**+0.02**, leakage η² 0.63→0.03.
+  The L2/cosine normalization is the lever (removes vector magnitude = the 1-count = verbosity);
+  IDF alone insufficient. Output: `data/clean/model_matrix_controlled.csv` (4,366×289, cosine-ready;
+  carries `n_fields_filled`, `n_values`, `eds_any`).
+  **Hard-clustering finding (important for the app):** with verbosity gone, k-means is weak — best
+  k=2 is a trivial "stated long_covid+covid (n=589)" vs "comorbidity-rich rest (n=3,777)" split;
+  silhouette ~0.4 but for a labeling reason, not phenotype. Conditions are a **continuum, not
+  clusters** → **for "patients like me" use kNN similarity on the controlled matrix, NOT hard
+  clusters.** Next: validate kNN (seed phenotypes → neighbors share phenotype), consider
+  soft/overlapping clustering or LLM yes/no/unknown imputation to sharpen subtypes.
+  **Conditions (Eli's flag):** me_cfs/ms canonicalization clean (no false positives); EDS
+  undercounted in `conditions` alone (86) → use `eds_any` (119, cross-field) — now a column in the
+  controlled matrix. **Data:** cleaned matrices + reports + the DB bundled to controlled S3
+  `s3://patientpunk/6_11_hackathon/` for Eli (ask a maintainer for a presigned link).
