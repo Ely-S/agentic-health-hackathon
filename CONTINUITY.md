@@ -85,6 +85,14 @@ the visualizations in case live rendering breaks.
   positive-reporting bias and small-n drugs (366 drugs have ≥5 reports; many have 1–2)?
 - [ ] **Normalization** — condition/drug free-text is high-cardinality (e.g. mcas vs "mast
   cell activation"); a controlled vocab sharpens both similarity and the viz.
+- [ ] **DATA QUALITY (BLOCKER) — DeepSeek over-calls POSITIVE** (asymmetric; ~10–20% false
+  positives; negatives reliable). The ~78–80% positive rate is partly artifact. Audit to pin the
+  rate + check if uniform vs differential; consider re-running sentiment with a neutral/no-effect
+  class. **Trust contraindication signals over soft positives.** See notes log 2026-06-13.
+- [x] **Treatment-effect heterogeneity + per-drug efficacy logits — DONE (branch `clustering_analysis`).**
+  Continuum, not clusters → model drug-class × syndrome. Headline: neuro-psych worse for EDS;
+  antihistamine→MCAS & LDN→fibromyalgia better. Scoring artifact:
+  `data/clean/drug_logit_coefficients.csv`. See notes log.
 - [ ] Clinical-study retrieval + synthesis (stretch).
 
 ## Notes log (append below — newest at the bottom)
@@ -141,3 +149,56 @@ the visualizations in case live rendering breaks.
   undercounted in `conditions` alone (86) → use `eds_any` (119, cross-field) — now a column in the
   controlled matrix. **Data:** cleaned matrices + reports + the DB bundled to controlled S3
   `s3://patientpunk/6_11_hackathon/` for Eli (ask a maintainer for a presigned link).
+- **2026-06-13 — Claude (Opus, w/ Shaun): treatment-effect heterogeneity + drug-efficacy logits + a SENTIMENT DATA-QUALITY problem. (CURRENT STATE / handoff.)**
+  All of this is on branch **`clustering_analysis`** (scripts committed; data outputs in gitignored
+  `data/clean/`; nothing merged to `main`).
+
+  **Where the clustering arc landed:** there are NO clean patient clusters — the spectrum is a
+  **continuum**. The actionable structure is not patient clusters but **drug-class × syndrome
+  interactions** (which treatments work/fail for which part of the spectrum).
+
+  **kNN similarity** (`scripts/knn_sanity.py`): controlled cosine space gives phenotype-coherent
+  neighbors. Correction to an earlier claim: plain **presence+cosine matches phenotype as well as /
+  better than the IDF-weighted** version (IDF down-weights the marker conditions); residual
+  neighbor-verbosity corr is mostly legitimate (verbosity ≈ comorbidity burden). App: cosine kNN on
+  dense fields, skip IDF.
+
+  **Treatment heterogeneity** (`treatment_heterogeneity.py`, `treatment_spectrum_models.py`,
+  `treatment_pooled_model.py`, `treatment_logit_predictive.py`):
+  - **Robust signals (survive pooling + FDR):** neuro-psychiatric (SSRI-type) drugs WORSE for
+    **EDS** (OR ~0.25–0.31; ~33% positive vs ~73% baseline — strongest, most reproducible finding);
+    autonomic/CV worse for MCAS (OR 0.44); supplement/mito worse for ME/CFS; antiviral/anticoag
+    worse for MCAS. **Better:** antihistamines for MCAS/housebound (adj OR ~2–4); **LDN for
+    fibromyalgia** (OR ~3.5, matches real off-label use); metabolic (metformin/GLP-1) for
+    fibromyalgia/SFN. Autonomic/CV broadly well-tolerated.
+  - **Pooled partially-pooled model** = the recommended vehicle: one L2 logistic over all reports,
+    `P(positive) ~ drug_group*condition`, patient-bootstrap CIs, broad mechanism drug groups for power.
+  - **Per-drug PREDICTIVE logits** → **`data/clean/drug_logit_coefficients.csv`** = a scoring
+    artifact (`logit = const + Σ coef·predictor`) for "given a patient's conditions, P(success) for
+    drug X." Widened groups cover 52% of reports.
+  - Cleaning: `symptom_trajectory` regex-normalized to 5 buckets in `clean_encode.py` (was 28 junk
+    values); matrices regenerated; verbosity control unchanged.
+
+  **⚠️ NEW PROBLEM — DeepSeek over-calls POSITIVE (sentiment data quality).** Audited labels vs
+  source text. Error is **asymmetric**: negatives reliable (6/6 read correct); positives
+  contaminated. Real mislabels found as `positive`: *"didn't move the needle either way"* (no
+  effect), *"[it] stopped working"* (past-positive-now-failed), *"just started last week, showing
+  promise"* (aspirational), a drug merely listed among 4 prescribed. Explicit-error-phrase floor =
+  3.4% of positives; manual read of 9 random positives → ~2 clear errors (~22%); true
+  false-positive rate likely **~10–20%**, NOT yet pinned. **Root cause:** schema has no
+  *neutral/no-effect* class, so neutral/early/recommendation mentions round up to positive (+ LLM
+  positivity lean). **Consequence:** the ~78–80% positive rate is partly artifact → **trust the
+  negative/contraindication signals, distrust the soft positives** (our headline findings ARE
+  negatives, so they hold; "success" signals are shakier). Relative comparisons hold *only if* the
+  over-call rate is uniform across drugs/conditions — **UNVERIFIED**.
+
+  **NEXT STEPS (in order):**
+  1. **Labeled sentiment audit (~100 reads)** → pin the false-positive rate AND test whether it's
+     uniform or differs by drug/condition (differential = biases the heterogeneity models).
+  2. If material/differential: **re-run DeepSeek sentiment with a corrected prompt** (add
+     neutral/no-effect class; ignore aspirational/just-started; require an attributed outcome).
+  3. **Finalize predictive logits conditions+severity only** — DROP `symptom_trajectory` as a
+     predictor (outcome-adjacent → "improving" → spurious "success" via reverse causation); wrap
+     `drug_logit_coefficients.csv` in a `predict_drug_success(conditions)` helper.
+  4. Optional: soft/overlapping clustering (NMF/archetypes) for "syndrome axes"; widen drug groups
+     further; multivariable disentangling of overlapping conditions.
