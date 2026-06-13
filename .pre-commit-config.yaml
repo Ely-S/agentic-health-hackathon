@@ -1,0 +1,29 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.0
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.16.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - pydantic>=2.11.0,<3
+          - fastapi>=0.128.0
+          - httpx>=0.28.1,<0.29
+          - rich>=14.0.0,<15
+          - typer>=0.16.0,<0.17
+          - uvicorn>=0.30.0
+  - repo: https://github.com/pytest-dev/pytest
+    rev: 8.4.1
+    hooks:
+      - id: pytest
+        additional_dependencies:
+          - pytest-cov>=6.2.0,<7
+          - pydantic>=2.11.0,<3
+          - fastapi>=0.128.0
+          - httpx>=0.28.1,<0.29
+          - rich>=14.0.0,<15
+          - typer>=0.16.0,<0.17
+          - uvicorn>=0.30.0

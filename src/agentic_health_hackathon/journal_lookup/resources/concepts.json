@@ -1,0 +1,122 @@
+[
+  {
+    "slug": "long_covid",
+    "display_name": "Long COVID",
+    "source_fields": ["conditions", "prior_infections", "onset_trigger"],
+    "aliases": ["long covid", "long-covid", "pasc", "post covid", "post-covid", "long hauler", "longhauler"],
+    "mesh_terms": ["COVID-19", "Post-Acute COVID-19 Syndrome"],
+    "query_terms": ["long COVID", "post-acute sequelae of SARS-CoV-2", "PASC"]
+  },
+  {
+    "slug": "pem",
+    "display_name": "Post-Exertional Malaise",
+    "source_fields": ["conditions", "post_exercise_recovery_window"],
+    "aliases": ["pem", "post exertional malaise", "post-exertional malaise", "post exertional", "energy envelope"],
+    "mesh_terms": ["Fatigue Syndrome, Chronic"],
+    "query_terms": ["post-exertional malaise", "effort intolerance"]
+  },
+  {
+    "slug": "me_cfs",
+    "display_name": "ME/CFS",
+    "source_fields": ["conditions"],
+    "aliases": ["me/cfs", "mecfs", "me cfs", "cfs", "chronic fatigue syndrome", "myalgic encephalomyelitis"],
+    "mesh_terms": ["Fatigue Syndrome, Chronic"],
+    "query_terms": ["ME/CFS", "myalgic encephalomyelitis", "chronic fatigue syndrome"]
+  },
+  {
+    "slug": "pots",
+    "display_name": "POTS",
+    "source_fields": ["conditions", "dysautonomia_type", "dysautonomia_symptom_cluster"],
+    "aliases": ["pots", "postural orthostatic tachycardia syndrome", "postural tachycardia", "hyperpots", "hyperadrenergic pots"],
+    "mesh_terms": ["Postural Orthostatic Tachycardia Syndrome"],
+    "query_terms": ["POTS", "postural orthostatic tachycardia syndrome"]
+  },
+  {
+    "slug": "dysautonomia",
+    "display_name": "Dysautonomia",
+    "source_fields": ["conditions", "dysautonomia_type", "dysautonomia_symptom_cluster"],
+    "aliases": ["dysautonomia", "autonomic dysfunction", "orthostatic intolerance", "orthostatic hypotension", "ist", "inappropriate sinus tachycardia"],
+    "mesh_terms": ["Autonomic Nervous System Diseases"],
+    "query_terms": ["dysautonomia", "autonomic dysfunction", "orthostatic intolerance"]
+  },
+  {
+    "slug": "mcas",
+    "display_name": "MCAS",
+    "source_fields": ["conditions", "mast_cell_involvement", "mast_cell_stabilizer_use"],
+    "aliases": ["mcas", "mast cell activation syndrome", "mast cell activation", "histamine intolerance", "mast cell dysfunction"],
+    "mesh_terms": ["Mast Cell Activation Syndrome"],
+    "query_terms": ["MCAS", "mast cell activation syndrome", "histamine intolerance"]
+  },
+  {
+    "slug": "eds_hypermobility_cci",
+    "display_name": "EDS / Hypermobility / CCI",
+    "source_fields": ["conditions", "connective_tissue_symptoms"],
+    "aliases": ["eds", "ehlers danlos", "ehlers-danlos syndrome", "heds", "hypermobility", "hypermobile", "cci", "craniocervical instability"],
+    "mesh_terms": ["Ehlers-Danlos Syndrome", "Joint Instability"],
+    "query_terms": ["Ehlers-Danlos syndrome", "hypermobility", "craniocervical instability"]
+  },
+  {
+    "slug": "small_fiber_neuropathy",
+    "display_name": "Small Fiber Neuropathy",
+    "source_fields": ["conditions", "dysautonomia_type"],
+    "aliases": ["small fiber neuropathy", "small fibre neuropathy", "sfn"],
+    "mesh_terms": ["Peripheral Nervous System Diseases"],
+    "query_terms": ["small fiber neuropathy", "small fibre neuropathy", "SFN"]
+  },
+  {
+    "slug": "fibromyalgia",
+    "display_name": "Fibromyalgia",
+    "source_fields": ["conditions", "myalgia_distribution"],
+    "aliases": ["fibromyalgia", "fibro"],
+    "mesh_terms": ["Fibromyalgia"],
+    "query_terms": ["fibromyalgia"]
+  },
+  {
+    "slug": "ibs",
+    "display_name": "Irritable Bowel Syndrome",
+    "source_fields": ["conditions"],
+    "aliases": ["ibs", "irritable bowel", "irritable bowel syndrome"],
+    "mesh_terms": ["Irritable Bowel Syndrome"],
+    "query_terms": ["IBS", "irritable bowel syndrome"]
+  },
+  {
+    "slug": "gastroparesis",
+    "display_name": "Gastroparesis",
+    "source_fields": ["conditions"],
+    "aliases": ["gastroparesis"],
+    "mesh_terms": ["Gastroparesis"],
+    "query_terms": ["gastroparesis"]
+  },
+  {
+    "slug": "brain_fog_cognitive_impairment",
+    "display_name": "Brain Fog / Cognitive Impairment",
+    "source_fields": ["cognitive_impairment_type", "conditions"],
+    "aliases": ["brain fog", "brainfog", "cognitive impairment", "memory issues", "memory decay"],
+    "mesh_terms": ["Cognition Disorders"],
+    "query_terms": ["brain fog", "cognitive impairment", "cognition disorders"]
+  },
+  {
+    "slug": "viral_reactivation_ebv",
+    "display_name": "EBV / Viral Reactivation",
+    "source_fields": ["prior_infections", "biomarker_results"],
+    "aliases": ["ebv", "epstein barr", "epstein-barr", "mono", "viral reactivation", "ebv reactivation"],
+    "mesh_terms": ["Epstein-Barr Virus Infections"],
+    "query_terms": ["EBV reactivation", "Epstein-Barr virus", "viral reactivation"]
+  },
+  {
+    "slug": "lupus",
+    "display_name": "Lupus",
+    "source_fields": ["conditions"],
+    "aliases": ["lupus", "sle"],
+    "mesh_terms": ["Lupus Erythematosus, Systemic"],
+    "query_terms": ["lupus", "systemic lupus erythematosus"]
+  },
+  {
+    "slug": "hashimotos",
+    "display_name": "Hashimoto's",
+    "source_fields": ["conditions"],
+    "aliases": ["hashimotos", "hashimoto", "hashimoto's", "hashimotos thyroiditis"],
+    "mesh_terms": ["Thyroiditis, Autoimmune"],
+    "query_terms": ["Hashimoto's thyroiditis", "autoimmune thyroiditis"]
+  }
+]

@@ -268,3 +268,20 @@ the visualizations in case live rendering breaks.
      `drug_logit_coefficients.csv` in a `predict_drug_success(conditions)` helper.
   4. Optional: soft/overlapping clustering (NMF/archetypes) for "syndrome axes"; widen drug groups
      further; multivariable disentangling of overlapping conditions.
+- **2026-06-13 - Codex (GPT-5): merged journal lookup + shared-decision scaffold into
+  `clustering_analysis`.** Brought over the importable `agentic_health_hackathon` package from
+  the journal lookup workstream and added it alongside the existing FastAPI explorer/backend,
+  without moving any raw patient data into git. New entry points:
+  - `journal-lookup` for literature review / PubMed-first evidence retrieval.
+  - `shared-decision plan` for stepped intake, safety/privacy framing, logit coefficient scoring,
+    and explicit missing-capability reporting for controlled-data backends.
+
+  The shared-decision orchestrator now has typed hooks for four layers: controlled-data kNN,
+  nearest-neighbor treatment ranking, per-drug-category logit coefficients, and optional journal
+  lookup. It does not fabricate unavailable data: if `cleaned_v2/model_matrix_controlled.csv`,
+  `cleaned_v2/drug_sentiment.csv`, or logit coefficients are not supplied through a backend, the
+  result reports that capability as missing. Literature lookup is disabled by default and only runs
+  when a journal backend is supplied and explicitly requested.
+
+  Packaging was merged rather than overwritten: the branch still installs `backend.*` for the
+  FastAPI app and now also installs `agentic_health_hackathon.*` from `src/`.

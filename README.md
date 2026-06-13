@@ -56,6 +56,46 @@ Expected response:
 {"status":"ok","database":"patientpunk.db"}
 ```
 
+### Journal lookup
+
+The branch also includes a literature-review workstream under
+`src/agentic_health_hackathon/journal_lookup/` with a Typer CLI:
+
+```bash
+journal-lookup concepts --problem me_cfs --problem pots
+journal-lookup query --text "small fiber neuropathy and long covid treatment"
+```
+
+It searches PubMed first, enriches with Europe PMC, OpenAlex, and Crossref metadata, then
+returns structured evidence summaries with citations and a not-medical-advice disclaimer.
+
+Optional Streamlit demo:
+
+```bash
+streamlit run streamlit_app.py
+```
+
+### Shared-decision scaffold
+
+The shared-decision layer under `src/agentic_health_hackathon/shared_decision/` is the
+integration surface for the product flow:
+
+- stepped intake and feature mapping
+- safety and privacy rules attached to every result
+- controlled-data backend protocols for kNN and treatment ranking
+- per-drug-category logit coefficient scoring
+- optional literature lookup wiring through the journal lookup service
+
+Example:
+
+```bash
+shared-decision plan --condition fibromyalgia --symptom "delayed crash after activity" \
+  --severity housebound --treatment-group "LDN/immunomodulator" --json
+```
+
+Until the controlled `cleaned_v2` data backends are wired, the scaffold reports missing
+capabilities instead of fabricating neighbor or treatment evidence.
+
 ---
 
 ## What we are building (this hackathon)
