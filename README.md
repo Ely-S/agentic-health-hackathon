@@ -14,11 +14,12 @@ patient-authored Reddit data, with cluster and comorbidity visualizations on top
 
 ## Local install and run
 
-This repo now includes a shareable local app layout:
+This repo includes a shareable local app layout:
 
 - `backend/` FastAPI API
 - `frontend/` static HTML pages
-- `patientpunk.db` and `posts.db` in the repo root
+- `patientpunk.db` is **not** committed — it is controlled patient data and lives in S3
+  (see [Data access](#data-access--and-why-no-data-is-in-this-repo)). Fetch it locally (below).
 
 ### Prerequisites
 
@@ -31,6 +32,17 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
 pip install -e .
+```
+
+### Get the data
+
+`patientpunk.db` (the corrected, consolidated SQLite — 5-class drug sentiment) is **controlled
+patient data and is not in the repo.** Fetch it into the repo root (it's gitignored), or set
+`PATIENTPUNK_DB` to its path:
+
+```bash
+aws s3 cp s3://patientpunk/6_11_hackathon/patientpunk.db ./patientpunk.db   # with AWS creds
+# or download a maintainer-provided presigned link into ./patientpunk.db
 ```
 
 ### Run

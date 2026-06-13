@@ -308,3 +308,13 @@ the visualizations in case live rendering breaks.
   `metformin`, `magnesium`, `CoQ10/mito`, `B12/B-complex`, `vitamin D`, and `LDA
   (low-dose abilify)`. Treat those as fine-grained audit/reporting buckets. The broad
   categories above are the current product-facing/logit categories.
+- **2026-06-13 — Claude (Opus, w/ Shaun): DB hygiene + treatment predictor.** Corrected
+  `patientpunk.db` / `posts.db` (5-class re-run sentiment) uploaded to controlled S3
+  `s3://patientpunk/6_11_hackathon/`; **removed both DBs from the repo tree** (`git rm --cached`;
+  they're gitignored). Backend now reads `PATIENTPUNK_DB` (defaults to repo-root); README "Get the
+  data" step fetches from S3. New: `POST /api/predict` + `frontend/treatment_predictor.html` —
+  patient's tracked variables → each drug class's predicted P(positive experience), via the
+  per-category logits (`backend/search_api/drug_logit_coefficients.csv`, fit on corrected data).
+  **⚠ THE REPO IS PUBLIC and the DBs are still in git HISTORY** (Eli's commit `4954aeb`) — patient
+  data is publicly recoverable until a **coordinated `git filter-repo` + force-push across `main` +
+  all branches** (everyone re-clones). Tree removal alone does NOT fix this.
