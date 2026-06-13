@@ -70,6 +70,7 @@ class TreatmentSummary(BaseModel):
     positive: int
     negative: int
     mixed: int
+    no_effect: int
     pct_positive: int
     normalized_score: float
     side_effects: list[str]
@@ -146,3 +147,30 @@ class MetadataResponse(BaseModel):
     post_count: int
     treatment_report_count: int
     treatment_user_count: int
+
+
+# ---- treatment-outcome prediction (our per-category logit models in the UI) ----
+
+class PredictRequest(BaseModel):
+    """The patient's tracked variables: condition keys + an optional functional-severity level."""
+    conditions: list[str] = Field(default_factory=list, max_length=20)
+    severity: str | None = Field(default=None, max_length=40)
+
+
+class TreatmentPrediction(BaseModel):
+    category: str                 # drug-mechanism class (the model unit)
+    p_positive: int               # predicted % chance of a positive experience for THIS profile
+    baseline: int                 # predicted % for a patient with none of the modelled conditions
+    delta: int                    # p_positive - baseline (how the profile shifts the odds)
+    n: int                        # reports the model was fit on (support / confidence)
+    drivers: list[str]            # which of the patient's variables pushed it up/down
+    confidence: str               # "good" | "limited" (from n)
+
+
+class PredictResponse(BaseModel):
+    profile: list[str]
+    predictions: list[TreatmentPrediction]
+    disclaimer: str = (
+        "Hypothesis-generating decision support from lived-experience reports — NOT medical "
+        "advice. Predictions are from a logistic model on observational, self-reported data."
+    )

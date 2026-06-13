@@ -228,7 +228,7 @@ def _search_posts(
                 user_id=row["user_id"],
                 title=row["title"] or "",
                 excerpt=f"{body_text[:280].strip()}..." if len(body_text) > 280 else body_text,
-                flair=row["flair"] or "Unflaird",
+                flair=row["flair"] or "Unflaired",
                 post_date=int(row["post_date"] or 0),
                 score=int(row["score"] or 0),
                 matched_count=int(row["matched_count"] or 0),
@@ -394,6 +394,7 @@ def _top_treatments(
           SUM(CASE WHEN tr.sentiment = 'positive' THEN 1 ELSE 0 END) AS positive,
           SUM(CASE WHEN tr.sentiment = 'negative' THEN 1 ELSE 0 END) AS negative,
           SUM(CASE WHEN tr.sentiment = 'mixed' THEN 1 ELSE 0 END) AS mixed,
+          SUM(CASE WHEN tr.sentiment = 'no_effect' THEN 1 ELSE 0 END) AS no_effect,
           ROUND(100.0 * SUM(CASE WHEN tr.sentiment = 'positive' THEN 1 ELSE 0 END) / COUNT(*), 0) AS pct_positive,
           (
             1.0 * SUM(
@@ -447,6 +448,7 @@ def _top_treatments(
                 positive=int(row["positive"] or 0),
                 negative=int(row["negative"] or 0),
                 mixed=int(row["mixed"] or 0),
+                no_effect=int(row["no_effect"] or 0),
                 pct_positive=int(row["pct_positive"] or 0),
                 normalized_score=round(float(row["normalized_score"] or 0.0), 2),
                 side_effects=[name for name, _ in side_effects.most_common(3)],
@@ -606,7 +608,7 @@ def get_post_detail(post_id: str) -> PostDetailResponse | None:
         user_id=row["user_id"],
         title=row["title"],
         body_text=row["body_text"],
-        flair=row["flair"] or "Unflaird",
+        flair=row["flair"] or "Unflaired",
         post_date=int(row["post_date"] or 0),
     )
 

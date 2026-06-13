@@ -259,6 +259,7 @@ output*/
 *.csv
 *.tsv
 !docs/*.csv
+!backend/search_api/drug_logit_coefficients.csv
 
 # Frontend (a hackathon app may add a JS UI)
 node_modules/

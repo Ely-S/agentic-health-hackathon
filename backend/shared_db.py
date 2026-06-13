@@ -1,14 +1,13 @@
 from __future__ import annotations
 
+import os
 import sqlite3
 from pathlib import Path
 
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR.parent / "patientpunk.db"
-NORMALIZED_RECORDS_PATH = (
-    BASE_DIR.parent / "6_11_hackathon" / "02_perpatient_records" / "records_normalized.csv"
-)
+# Configurable so the API can point at a local / controlled copy rather than the in-repo DB.
+DB_PATH = Path(os.environ.get("PATIENTPUNK_DB", str(BASE_DIR.parent / "patientpunk.db")))
 
 
 def connect_sqlite(
