@@ -20,6 +20,7 @@ class JournalLookupSettings(BaseModel):
     default_end_year: int = 3000
     pubmed_tool: str = "agentic-health-hackathon"
     pubmed_email: str | None = None
+    pubmed_api_key: str | None = None   # NCBI E-utilities key: raises the rate limit 3/s -> 10/s
     user_agent: str = "agentic-health-hackathon/0.1.0"
     openalex_email: str | None = None
     crossref_mailto: str | None = None
@@ -43,6 +44,7 @@ class JournalLookupSettings(BaseModel):
             default_max_results=default_max_results,
             default_start_year=default_start_year,
             pubmed_email=os.environ.get("PUBMED_EMAIL"),
+            pubmed_api_key=os.environ.get("NCBI_API_KEY") or os.environ.get("PUBMED_API_KEY"),
             openalex_email=os.environ.get("OPENALEX_EMAIL"),
             crossref_mailto=os.environ.get("CROSSREF_MAILTO"),
         )

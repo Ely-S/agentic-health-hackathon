@@ -1488,6 +1488,14 @@
       const sxFindBtn = document.getElementById("sx-find");
       if (sxFindBtn) sxFindBtn.addEventListener("click", sxLoadEvidence);
       sxLoadEvidence();
+
+      // Seed the literature popup with whatever profile is currently selected.
+      window.litSearchContext = function () {
+        const conds = [...document.querySelectorAll("#sx-conds .chip.active")]
+          .map((c) => c.textContent.trim())
+          .filter(Boolean);
+        return (conds.length ? conds.join(" ") + " " : "") + "long covid treatment";
+      };
     </script>
     <script src="/litsearch.js"></script>
   </body>

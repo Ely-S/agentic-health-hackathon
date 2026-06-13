@@ -1370,6 +1370,14 @@
       });
 
       initializeKeywordExplorer();
+
+      // Seed the literature popup with the current (non-excluded) query terms.
+      window.litSearchContext = function () {
+        return (typeof keywordQuery !== "undefined" ? keywordQuery : [])
+          .filter(function (t) { return t.weight !== "exclude"; })
+          .map(function (t) { return t.term; })
+          .join(" ");
+      };
     </script>
     <script src="/litsearch.js"></script>
   </body>

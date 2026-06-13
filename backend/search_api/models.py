@@ -256,6 +256,8 @@ class LitArticle(BaseModel):
 class LitSearchResponse(BaseModel):
     query: str
     disclaimer: str = ""
+    llm_summary: str | None = None   # narrative summary of the hits (when an LLM key is set)
+    summary_source: str = "deterministic"   # "llm" | "deterministic"
     sections: list[LitSection] = []
     articles: list[LitArticle] = []
     error: str | None = None         # set if the lookup failed (network, no results)

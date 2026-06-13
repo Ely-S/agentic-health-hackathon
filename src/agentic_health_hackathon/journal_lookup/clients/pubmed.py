@@ -29,6 +29,8 @@ class PubMedClient(CachedHttpClient):
         }
         if self.settings.pubmed_email:
             params["email"] = self.settings.pubmed_email
+        if self.settings.pubmed_api_key:
+            params["api_key"] = self.settings.pubmed_api_key
         payload = self.get_json(
             namespace="pubmed_search",
             url=f"{PUBMED_BASE_URL}/esearch.fcgi",
@@ -51,6 +53,8 @@ class PubMedClient(CachedHttpClient):
         }
         if self.settings.pubmed_email:
             params["email"] = self.settings.pubmed_email
+        if self.settings.pubmed_api_key:
+            params["api_key"] = self.settings.pubmed_api_key
         xml_payload = self.get_text(
             namespace="pubmed_fetch",
             url=f"{PUBMED_BASE_URL}/efetch.fcgi",
@@ -138,6 +142,8 @@ class PubMedClient(CachedHttpClient):
         }
         if self.settings.pubmed_email:
             params["email"] = self.settings.pubmed_email
+        if self.settings.pubmed_api_key:
+            params["api_key"] = self.settings.pubmed_api_key
         xml_payload = self.get_text(
             namespace="pubmed_similar",
             url=f"{PUBMED_BASE_URL}/elink.fcgi",

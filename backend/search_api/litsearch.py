@@ -96,6 +96,32 @@ def lit_search(req: LitSearchRequest) -> LitSearchResponse:
             query=query, disclaimer=summary.disclaimer, sections=sections, articles=[],
             error="No matching literature was found for that query.",
         )
+
+    llm_summary = _llm_summary(query, articles)
     return LitSearchResponse(
         query=query, disclaimer=summary.disclaimer, sections=sections, articles=articles,
+        llm_summary=llm_summary, summary_source="llm" if llm_summary else "deterministic",
     )
+
+
+def _llm_summary(query: str, articles) -> str | None:
+    """Ask the LLM (if a key is configured) to narrate the retrieved evidence. None otherwise."""
+    from .evidence import _llm
+
+    lines = []
+    for i, a in enumerate(articles[:8], 1):
+        sig = {"positive": "positive", "mixed_or_negative": "mixed/negative"}.get(a.signal, "neutral")
+        lines.append(
+            f"[{i}] ({a.year or 'n.d.'}, {a.evidence_type or 'study'}, signal: {sig}) "
+            f"{a.title} — {(a.abstract or '')[:300]}"
+        )
+    prompt = (
+        "You are a careful clinical-evidence assistant for a patient-experience tool. This is NOT "
+        f"medical advice. A user searched the literature for: \"{query}\".\n\n"
+        "Here are the retrieved papers:\n" + "\n".join(lines) + "\n\n"
+        "Write a concise, plain-language evidence summary in 3-5 sentences (or short bullets): what the "
+        "literature suggests overall, which interventions show a positive vs mixed/negative signal, and the "
+        "main limitations (study type, size, certainty). Reference papers as [1], [2]. Stay grounded in the "
+        "excerpts above — do not invent findings, dosing, or recommendations."
+    )
+    return _llm(prompt)

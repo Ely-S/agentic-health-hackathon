@@ -35,6 +35,9 @@
   .lit-note{color:#66706a;font-size:12px;margin:2px 0 14px}
   .lit-status{padding:24px 4px;color:#66706a;font-size:14px;text-align:center}
   .lit-err{padding:14px;background:#f6e0da;border:1px solid #e2b4a8;border-radius:10px;color:#7a3a2c;font-size:13.5px}
+  .lit-sum{margin:0 0 16px;padding:14px 16px;background:#eef3ef;border:1px solid #cdddd2;border-radius:12px}
+  .lit-sum-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#3f6654;margin-bottom:7px}
+  .lit-sum p{margin:0 0 7px;font-size:13.5px;line-height:1.6;color:#28302b}.lit-sum p:last-child{margin-bottom:0}
   .lit-sec{margin:0 0 16px}
   .lit-sec h3{margin:0 0 8px;font-size:15px;font-weight:700}
   .lit-claim{margin:0 0 7px;padding-left:14px;position:relative;font-size:13.5px;line-height:1.55;color:#2b322e}
@@ -99,13 +102,24 @@
     var chip = el('<button class="lit-chip">' + esc(q) + "</button>");
     chip.addEventListener("click", function () {
       input.value = q;
+      userEdited = true;
       run();
     });
     chipsBox.appendChild(chip);
   });
 
+  var userEdited = false;
   function open() {
     overlay.classList.add("open");
+    // Seed from whatever the page says we're currently looking at, unless the user typed their own.
+    if (!userEdited && typeof window.litSearchContext === "function") {
+      var seed = "";
+      try { seed = (window.litSearchContext() || "").trim(); } catch (e) {}
+      if (seed && seed !== input.value.trim()) {
+        input.value = seed;
+        setTimeout(run, 0);
+      }
+    }
     setTimeout(function () { input.focus(); }, 30);
   }
   function close() { overlay.classList.remove("open"); }
@@ -116,6 +130,7 @@
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
   goBtn.addEventListener("click", run);
   input.addEventListener("keydown", function (e) { if (e.key === "Enter") run(); });
+  input.addEventListener("input", function () { userEdited = true; });
   // Let any page element opt in as a trigger: <a data-litsearch>…</a>
   document.querySelectorAll("[data-litsearch]").forEach(function (n) {
     n.addEventListener("click", function (e) { e.preventDefault(); open(); });
@@ -154,6 +169,12 @@
       return;
     }
     var html = "";
+    if (d.llm_summary) {
+      var paras = d.llm_summary.split(/\n{2,}|\n(?=[-•])/).map(function (p) {
+        return "<p>" + esc(p.trim()).replace(/\n/g, "<br>") + "</p>";
+      }).join("");
+      html += '<div class="lit-sum"><div class="lit-sum-label">AI summary</div>' + paras + "</div>";
+    }
     (d.sections || []).forEach(function (s) {
       if (!s.claims || !s.claims.length) return;
       html += '<div class="lit-sec"><h3>' + esc(s.title) + "</h3>";
