@@ -32,6 +32,40 @@ and open questions. Unlike code, this file is meant to be **written to often**.
 - **Upstream:** the dataset + extraction pipeline come from PatientPunk
   (<https://github.com/Ely-S/PatientPunk>). We build the *app* on top.
 
+## Analysis work log — `clustering_analysis` branch (what we've built, 2026-06-13)
+> All of this lives on the **`clustering_analysis`** branch — **NOT yet merged to `main`**. If you're
+> reading CONTINUITY on `main` / GitHub's default view, the scripts and findings below will look
+> missing — switch to the branch. Data outputs are gitignored under `data/clean/`; the shareable
+> bundle is in S3 `cleaned_v2/` (see Orientation).
+
+**Pipeline (run in order):**
+| script | what it does | key output |
+|---|---|---|
+| `scripts/clean_encode.py` | multi-hot encode all 95 fields; normalize `symptom_trajectory` | `data/clean/model_matrix.csv`, `column_manifest.csv` |
+| `scripts/verbosity_control.py` | control the verbosity confound (IDF + L2/cosine) | `model_matrix_controlled.csv` (kNN-ready; `eds_any`, `n_fields_filled`) |
+| `scripts/knn_sanity.py` | validate similarity neighbours | finding: presence+cosine matches phenotype; IDF unneeded |
+| `scripts/treatment_heterogeneity.py` | drug×condition positive-rate descriptive (Fisher+FDR) | report |
+| `scripts/treatment_spectrum_models.py` | contraindication (harm) descriptive + per-drug adjusted logit | report |
+| `scripts/treatment_pooled_model.py` | pooled partially-pooled `drug_group×condition` model (bootstrap CIs) | report + heatmap |
+| `scripts/treatment_logit_predictive.py` | per-drug-group predictive logits | `data/clean/drug_logit_coefficients.csv` |
+| `scripts/rerun_filtered.py` | confirm dropping `positive/weak` preserves signals | finding: it does (~0 power cost) |
+
+**Findings (the science):**
+- Phenotype is a **continuum, not discrete clusters** → use **kNN similarity** on `model_matrix_controlled.csv`, not hard cluster labels.
+- Verbosity confound: presence encoding PC1↔fill r=**0.95** → IDF+L2/cosine → **0.02** (the L2/cosine is the lever; IDF unneeded/harmful for phenotype matching).
+- **Treatment response is heterogeneous = drug-class × syndrome.** Robust (negative-driven, trustworthy): neuro-psychiatric (SSRI-type) **WORSE for EDS** (strongest, most reproducible); autonomic/CV worse for MCAS; LDN **better for fibromyalgia**; metabolic better for fibro/SFN. Autonomic/CV broadly tolerated.
+- **Trust contraindication (negative) signals over "success" (positive) signals.**
+
+**Sentiment data-quality saga (important):**
+- Audited 88 labels vs source text: DeepSeek **over-calls POSITIVE** (~20–25%: uncredited multi-drug "stack" mentions, aspirational/just-started, and no-effect → positive). **Differential by drug** (supplements worst). Negatives audited **clean**.
+- Root cause: the classifier prompt's stack rule (`positive/weak` for any drug named in a "helped" stack) + no `neutral`/`no_effect` class.
+- **Fix A (stopgap, applied):** drop `positive/weak` → `drug_sentiment_clean.csv` (in `cleaned_v2/`). ~0 power cost (negatives, the bottleneck, untouched).
+- **Fix B (re-run, done 2026-06-13 — NOT yet validated/adopted):** corrected prompt + full reclassify → `pp_rebase/posts_rerun.db`. New 5-class counts: positive **5,836** (was 7,463), negative **1,357** (now harm-only), **no_effect 1,094** (new), mixed 804, ~740 → neutral/dropped. Yellow flag: `mixed` tripled (282→804) — sanity-check before adopting. Prompt edits: `pp_rebase/src/prompts/intervention_config.py`, `src/models.py`, `src/pipeline/classify.py`.
+
+**Data locations:** cleaned/corrected bundle → `s3://patientpunk/6_11_hackathon/cleaned_v2/`; source DB → `6_11_hackathon/patientpunk.db`; re-run output → `pp_rebase/posts_rerun.db` (local, not yet on S3).
+
+**Open / current task:** per-drug-category **logit models** (`P(success | patient conditions)`, one per defined drug group). Decisions pending: (1) build on the re-run data (richer — `no_effect` gives a proper "didn't work" denominator) after validating it, vs `drug_sentiment_clean.csv` now; (2) predictors = conditions + severity, **DROP `symptom_trajectory`** (outcome-adjacent → reverse causation); (3) some drug categories are power-limited (won't yield a stable logit).
+
 ## Hard rules / conventions (don't break these)
 1. **NO patient data in this repo — ever.** No `.db`, no raw `.json`/`.csv` of patient text
    or per-patient records. Data lives in **controlled S3** (presigned links). The repo holds
