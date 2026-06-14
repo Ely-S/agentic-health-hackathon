@@ -175,7 +175,7 @@ class PredictResponse(BaseModel):
     profile: list[str]
     predictions: list[TreatmentPrediction]
     disclaimer: str = (
-        "Hypothesis-generating decision support from lived-experience reports — NOT medical "
+        "Hypothesis-generating decision support from lived-experience reports. Not medical "
         "advice. Predictions are from a logistic model on observational, self-reported data."
     )
 
@@ -195,7 +195,7 @@ class TreatmentEvidenceResponse(BaseModel):
     predictions: list[TreatmentPrediction]
     quotes: dict[str, list[Quote]] = {}        # category -> sample quotes from the cohort
     disclaimer: str = (
-        "Decision support from lived-experience reports — NOT medical advice. Cohort = patients "
+        "Decision support from lived-experience reports. Not medical advice. Cohort = patients "
         "with overlapping conditions; predictions are from a logistic model on self-reported data."
     )
 
@@ -215,7 +215,7 @@ class ComorbidityResponse(BaseModel):
     population: int
     patterns: list[ComorbidityPattern] = []
     disclaimer: str = (
-        "Co-occurrence patterns from self-reported data — NOT a diagnosis. Enrichment means a "
+        "Co-occurrence patterns from self-reported data. Not a diagnosis. Enrichment means a "
         "condition is more common among patients like you than in the population; raise it with "
         "a clinician, do not self-diagnose."
     )
@@ -267,6 +267,7 @@ class ExplainRequest(BaseModel):
     category: str = Field(min_length=1, max_length=80)
     conditions: list[str] = Field(default_factory=list, max_length=20)
     severity: str | None = Field(default=None, max_length=40)
+    quotes: list[str] = Field(default_factory=list, max_length=12)   # real cohort quotes to ground the explanation
 
 
 class ExplainResponse(BaseModel):
