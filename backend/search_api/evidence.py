@@ -63,7 +63,7 @@ CLASS_FIT = {
         "dysautonomia": "may help because mast-cell mediators can aggravate autonomic instability",
     },
     "autonomic/cardiovascular": {
-        "pots": "is the core of POTS management — controlling heart rate and supporting blood volume",
+        "pots": "is the core of POTS management, controlling heart rate and supporting blood volume",
         "dysautonomia": "directly addresses your autonomic dysregulation",
         "mcas": "covers the cardiovascular symptoms that overlap MCAS",
     },
@@ -251,10 +251,11 @@ def explain(req: ExplainRequest) -> ExplainResponse:
         + quote_block +
         " In 2-3 short, plain-language sentences explain why this class might or might not help THIS "
         "specific profile. "
-        + ("Ground your reasoning in the real reports above — paraphrase what patients experienced "
+        + ("Ground your reasoning in the real reports above, paraphrase what patients experienced "
            "(don't quote verbatim) and connect it to the mechanism. " if quote_block else
            "Cover what the class does / its proposed mechanism, then why it fits this profile. ")
-        + "Be honest and non-prescriptive; do not invent dosing or overstate certainty."
+        + "Be honest and non-prescriptive; do not invent dosing or overstate certainty. "
+        + "Write in plain prose and do not use em dashes."
     )
     text = _llm(prompt, max_tokens=260)
     if text:
@@ -277,5 +278,5 @@ def explain(req: ExplainRequest) -> ExplainResponse:
         why = "Select your conditions to see how this class lines up with your specific phenotype."
     fb = (f"{drugword} {mech}. {why} The model puts the chance of a positive experience around "
           f"{pct}%" + (f", most influenced by {drivers}" if drivers else "") + ". "
-          "This is lived-experience signal, not clinical proof — discuss any change with a clinician.")
+          "This is lived-experience signal, not clinical proof. Discuss any change with a clinician.")
     return ExplainResponse(category=req.category, text=fb, source="fallback")

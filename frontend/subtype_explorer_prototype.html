@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Subtype Explorer Prototype</title>
+    <title>Patients Like Me</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -1103,23 +1103,18 @@
   <body>
     <div class="shell">
       <div class="banner">
-        <span><strong>Self-reported, AI-extracted patient experience.</strong> Not medical advice.</span>
-        <span>Always inspect quotes, denominators, support tier, and what evidence is missing.</span>
+        <span><strong>Real, self-reported patient experience.</strong> Not medical advice.</span>
+        <span>These are patterns from people like you, not clinical proof. Always look at the numbers and what is missing.</span>
       </div>
 
       <section class="hero">
         <div>
-          <h1>Subtype Explorer for treatment evidence and diagnosis patterns.</h1>
+          <h1>Patients Like Me</h1>
           <p>
-            An interactive prototype for moving between two questions: what similar patients reported
-            trying, and which diagnoses or phenotypes keep appearing in patients with similar symptoms.
+            See how your journey lines up with thousands of people living through the same conditions,
+            and what treatments and diagnoses actually showed up for patients like you.
           </p>
         </div>
-        <aside class="hero-meta">
-          <span class="eyebrow">Current Cohort</span>
-          <span class="big"><span id="hero-matched">—</span> matched patients</span>
-          <span class="small"><span id="hero-quoteable">—</span> patients with quoteable treatment reports · diagnosis mode stays suggestive, not diagnostic</span>
-        </aside>
       </section>
 
       <section class="app-grid">
@@ -1137,13 +1132,13 @@
         </style>
         <aside class="panel sidebar">
           <div class="section-head">
-            <h3>Patient Profile</h3>
-            <span>guided intake</span>
+            <h3>About You</h3>
+            <span>your conditions and how they affect you</span>
           </div>
 
           <div class="stack">
             <div class="field">
-              <label>Conditions (what our pipeline extracts &amp; models)</label>
+              <label>Your conditions</label>
               <div class="chips" id="sx-conds">
                 <span class="chip active" data-k="pots">POTS</span>
                 <span class="chip active" data-k="mcas">MCAS</span>
@@ -1157,12 +1152,12 @@
             </div>
 
             <div class="field">
-              <label>Functional status (one clean ladder, mild &rarr; bedbound)</label>
+              <label>How much it limits your daily life</label>
               <select id="sx-sev" class="text-input">
-                <option value="">— not specified —</option>
-                <option value="mild">Mild — functional with limits</option>
-                <option value="moderate">Moderate — significantly reduced</option>
-                <option value="mobility_limited">Mobility-limited — needs aids</option>
+                <option value="">Not specified</option>
+                <option value="mild">Mild (functional with limits)</option>
+                <option value="moderate">Moderate (significantly reduced)</option>
+                <option value="mobility_limited">Mobility limited (needs aids)</option>
                 <option value="housebound" selected>Housebound</option>
                 <option value="bedbound">Bedbound</option>
               </select>
@@ -1170,30 +1165,30 @@
 
             <div class="subtle-card">
               <p>
-                These are the variables our pipeline actually extracts and models.
-                <strong>Find Similar Patients</strong> pulls a real cohort that shares these conditions,
-                then ranks treatment classes with a logistic model fit on corrected, self-reported
-                outcomes — with 95% confidence intervals and a real-time, profile-specific explanation.
+                Tell us what you are living with, then tap <strong>Find Patients Like Me</strong>.
+                We pull a real group of patients who share your conditions and show what treatments
+                helped them and what diagnoses tend to follow, with honest confidence ranges and
+                explanations grounded in their own words.
               </p>
             </div>
 
             <div class="button-row">
-              <button class="button primary" id="sx-find">Find Similar Patients</button>
+              <button class="button primary" id="sx-find">Find Patients Like Me</button>
             </div>
           </div>
         </aside>
 
         <main class="panel main">
           <div class="tabs">
-            <button class="tab active" data-mode="treatment">Treatment Evidence</button>
-            <button class="tab" data-mode="diagnosis">Diagnosis Evidence</button>
-            <a class="tab" href="weighted_keyword_explorer.html" style="display:inline-flex;align-items:center;text-decoration:none;">Weighted Keyword Explorer ↗</a>
+            <button class="tab active" data-mode="treatment">Treatments that helped</button>
+            <button class="tab" data-mode="diagnosis">Related diagnoses</button>
+            <a class="tab" href="weighted_keyword_explorer.html" style="display:inline-flex;align-items:center;text-decoration:none;">Keyword explorer ↗</a>
           </div>
 
           <section id="treatment-mode" class="mode-panel active">
             <div class="section-head">
-              <h2>Treatment Evidence</h2>
-              <span>drug classes ranked by predicted chance of a positive experience for your profile</span>
+              <h2>Treatments that helped patients like you</h2>
+              <span>ranked by how often they gave a positive experience to people who share your conditions</span>
             </div>
 
             <div class="toolbar">
@@ -1206,10 +1201,10 @@
             </div>
 
             <div class="cohort-card">
-              <div class="metric"><strong id="sx-matched">—</strong><span>matched patients</span></div>
-              <div class="metric"><strong id="sx-quoteable">—</strong><span>with treatment reports</span></div>
+              <div class="metric"><strong id="sx-matched">-</strong><span>patients like you</span></div>
+              <div class="metric"><strong id="sx-quoteable">-</strong><span>with treatment reports</span></div>
               <div class="metric"><strong id="sx-classes">9</strong><span>treatment classes modeled</span></div>
-              <div class="metric"><strong id="sx-condcount">—</strong><span>conditions selected</span></div>
+              <div class="metric"><strong id="sx-condcount">-</strong><span>conditions selected</span></div>
             </div>
 
             <div class="cards" id="treatment-cards"></div>
@@ -1217,27 +1212,25 @@
 
           <section id="diagnosis-mode" class="mode-panel">
             <div class="section-head">
-              <h2>Diagnosis Evidence</h2>
-              <span>for patients still working toward diagnosis</span>
+              <h2>Diagnoses among patients like you</h2>
+              <span>conditions that often show up in people who share yours</span>
             </div>
 
             <div class="diagnosis-toolbar">
               <div class="left">
                 <span class="pill support-medium">Pattern mode</span>
-                <span id="dx-summary" style="color: var(--muted); font-size: 13px;">Pick your conditions and click <strong>Find Similar Patients</strong>.</span>
+                <span id="dx-summary" style="color: var(--muted); font-size: 13px;">Pick your conditions and click <strong>Find Patients Like Me</strong>.</span>
               </div>
               <div class="right">
-                <span class="pill warning">Suggestive co-occurrence — not a diagnosis</span>
+                <span class="pill warning">Suggestive co-occurrence, not a diagnosis</span>
               </div>
             </div>
 
             <div class="subtle-card" style="margin-bottom: 16px;">
               <p>
-                This flips the question from <strong>“what helped people like me?”</strong> to
-                <strong>“what conditions recur in patients who look like me?”</strong> Each card below is a
-                condition that is <strong>enriched</strong> in your cohort — more common among patients who
-                share your conditions than in the full patient population (lift&nbsp;&gt;&nbsp;1×). These are
-                prompts to raise with a clinician, never a diagnosis.
+                These are the conditions that show up most often in patients who share yours,
+                <strong>more common in your group</strong> than across all patients (lift&nbsp;over&nbsp;1×).
+                Think of them as starting points to raise with a clinician, never a diagnosis.
               </p>
             </div>
 
@@ -1261,7 +1254,7 @@
       function renderTreatmentCards() {
         const container = document.getElementById("treatment-cards");
         if (!window.EVIDENCE) {
-          container.innerHTML = '<div class="subtle-card"><p>Select your conditions, then click <strong>Find Similar Patients</strong> to see each treatment class’s predicted chance of helping someone like you.</p></div>';
+          container.innerHTML = '<div class="subtle-card"><p>Pick your conditions, then click <strong>Find Patients Like Me</strong> to see which treatments helped people like you.</p></div>';
           return;
         }
         const ev = window.EVIDENCE;
@@ -1292,7 +1285,7 @@
                 <div class="sx-scale"><span>0%</span><span>50%</span><span>100%</span></div>
                 <div class="stats-row">
                   <div class="stat"><strong>${p.p_positive}%</strong><span>predicted</span></div>
-                  <div class="stat"><strong>${p.ci_lo}–${p.ci_hi}</strong><span>95% CI</span></div>
+                  <div class="stat"><strong>${p.ci_lo} to ${p.ci_hi}</strong><span>95% CI</span></div>
                   <div class="stat"><strong>${p.evidence_count}</strong><span>cohort reports</span></div>
                   <div class="stat"><strong>${p.n}</strong><span>model n</span></div>
                 </div>
@@ -1368,8 +1361,6 @@
           const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
           set("sx-matched", (window.EVIDENCE.matched_patients || 0).toLocaleString());
           set("sx-quoteable", (window.EVIDENCE.quoteable || 0).toLocaleString());
-          set("hero-matched", (window.EVIDENCE.matched_patients || 0).toLocaleString());
-          set("hero-quoteable", (window.EVIDENCE.quoteable || 0).toLocaleString());
           set("sx-condcount", conds.length);
           const slice = (window.EVIDENCE.profile && window.EVIDENCE.profile.length)
             ? window.EVIDENCE.profile.join(" + ") + " slice"
@@ -1384,8 +1375,8 @@
           const cards = document.getElementById("treatment-cards");
           if (cards) {
             cards.innerHTML =
-              '<div class="subtle-card"><p><strong>Couldn’t reach the analysis server.</strong> ' +
-              "It may be starting up — give it a moment. " +
+              '<div class="subtle-card"><p><strong>Could not reach the analysis server.</strong> ' +
+              "It may be starting up. Give it a moment. " +
               '<button class="button primary" id="sx-retry" style="margin-left:8px">Retry</button></p></div>';
             const rb = document.getElementById("sx-retry");
             if (rb) rb.addEventListener("click", sxLoadEvidence);
@@ -1398,7 +1389,7 @@
       function renderDiagnosisCards() {
         const container = document.getElementById("diagnosis-cards");
         if (!window.COMORBIDITY) {
-          container.innerHTML = '<div class="subtle-card"><p>Select your conditions, then click <strong>Find Similar Patients</strong> to see which other conditions recur among patients like you.</p></div>';
+          container.innerHTML = '<div class="subtle-card"><p>Pick your conditions, then click <strong>Find Patients Like Me</strong> to see which other conditions show up in patients like you.</p></div>';
           return;
         }
         const co = window.COMORBIDITY;
@@ -1435,35 +1426,35 @@
         if (currentMode === "treatment") {
           const ev = window.EVIDENCE;
           drawer.innerHTML = `
-            <div class="section-head"><h3>How to read this</h3><span>treatment evidence</span></div>
+            <div class="section-head"><h3>How to read this</h3><span>treatments that helped</span></div>
             <div class="summary-grid">
-              <div class="subtle-card"><p><strong ${big}>${ev ? ev.matched_patients.toLocaleString() : "—"}</strong>patients share your conditions (${profTxt}).</p></div>
-              <div class="subtle-card"><p><strong ${big}>${ev ? ev.quoteable.toLocaleString() : "—"}</strong>of them left usable treatment reports.</p></div>
+              <div class="subtle-card"><p><strong ${big}>${ev ? ev.matched_patients.toLocaleString() : "-"}</strong>patients share your conditions (${profTxt}).</p></div>
+              <div class="subtle-card"><p><strong ${big}>${ev ? ev.quoteable.toLocaleString() : "-"}</strong>of them wrote about a treatment.</p></div>
             </div>
             <div class="why-box" style="margin: 14px 0;">
-              Each card’s <strong>%</strong> is a logistic-model estimate of the chance a patient like you reports a
-              <strong>positive</strong> experience with that drug class. The bar is its 95% confidence interval —
-              wider means less certain (smaller n). “Drivers” are the conditions in your profile that moved the estimate,
-              and quotes are real reports from your cohort.
+              Each card’s <strong>%</strong> is an estimate of the chance a patient like you reports a
+              <strong>positive</strong> experience with that group of treatments. The bar is its 95% confidence range,
+              and wider means less certain (fewer patients). “Drivers” are the conditions in your profile that moved the estimate,
+              and the explanations are grounded in patients’ own words.
             </div>
-            <div class="callout">${ev ? ev.disclaimer : "Decision support from lived-experience reports — not medical advice."}</div>
+            <div class="callout">${ev ? ev.disclaimer : "Decision support from lived patient experience, not medical advice."}</div>
           `;
           return;
         }
 
         const co = window.COMORBIDITY;
         drawer.innerHTML = `
-          <div class="section-head"><h3>How to read this</h3><span>diagnosis evidence</span></div>
+          <div class="section-head"><h3>How to read this</h3><span>related diagnoses</span></div>
           <div class="summary-grid">
-            <div class="subtle-card"><p><strong ${big}>${co ? co.cohort_size.toLocaleString() : "—"}</strong>patients share your conditions (${profTxt}).</p></div>
-            <div class="subtle-card"><p><strong ${big}>${co ? co.population.toLocaleString() : "—"}</strong>patients in the corpus — the baseline.</p></div>
+            <div class="subtle-card"><p><strong ${big}>${co ? co.cohort_size.toLocaleString() : "-"}</strong>patients share your conditions (${profTxt}).</p></div>
+            <div class="subtle-card"><p><strong ${big}>${co ? co.population.toLocaleString() : "-"}</strong>patients in total, the baseline.</p></div>
           </div>
           <div class="why-box" style="margin: 14px 0;">
-            <strong>Lift</strong> is how much more common a condition is in your cohort than in everyone:
-            2× means twice as common among patients like you. The bar shows your cohort’s rate; the tick (▏) marks the
-            population baseline. Only conditions reported by at least 5 cohort patients are shown.
+            <strong>Lift</strong> is how much more common a condition is among patients like you than in everyone:
+            2× means twice as common. The bar shows your group’s rate, and the tick (▏) marks the
+            population baseline. Only conditions reported by at least 5 patients like you are shown.
           </div>
-          <div class="callout">${co ? co.disclaimer : "Co-occurrence patterns from self-reported data — not a diagnosis."}</div>
+          <div class="callout">${co ? co.disclaimer : "Co-occurrence patterns from self-reported data, not a diagnosis."}</div>
         `;
       }
 
