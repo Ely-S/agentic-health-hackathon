@@ -14,11 +14,12 @@ patient-authored Reddit data, with cluster and comorbidity visualizations on top
 
 ## Local install and run
 
-This repo now includes a shareable local app layout:
+This repo includes a shareable local app layout:
 
 - `backend/` FastAPI API
 - `frontend/` static HTML pages
-- `patientpunk.db` and `posts.db` in the repo root
+- `patientpunk.db` is **not** committed — it is controlled patient data and lives in S3
+  (see [Data access](#data-access--and-why-no-data-is-in-this-repo)). Fetch it locally (below).
 
 ### Prerequisites
 
@@ -31,6 +32,17 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
 pip install -e .
+```
+
+### Get the data
+
+`patientpunk.db` (the corrected, consolidated SQLite — 5-class drug sentiment) is **controlled
+patient data and is not in the repo.** Fetch it into the repo root (it's gitignored), or set
+`PATIENTPUNK_DB` to its path:
+
+```bash
+aws s3 cp s3://patientpunk/6_11_hackathon/patientpunk.db ./patientpunk.db   # with AWS creds
+# or download a maintainer-provided presigned link into ./patientpunk.db
 ```
 
 ### Run
@@ -55,6 +67,46 @@ Expected response:
 ```json
 {"status":"ok","database":"patientpunk.db"}
 ```
+
+### Journal lookup
+
+The branch also includes a literature-review workstream under
+`src/agentic_health_hackathon/journal_lookup/` with a Typer CLI:
+
+```bash
+journal-lookup concepts --problem me_cfs --problem pots
+journal-lookup query --text "small fiber neuropathy and long covid treatment"
+```
+
+It searches PubMed first, enriches with Europe PMC, OpenAlex, and Crossref metadata, then
+returns structured evidence summaries with citations and a not-medical-advice disclaimer.
+
+Optional Streamlit demo:
+
+```bash
+streamlit run streamlit_app.py
+```
+
+### Shared-decision scaffold
+
+The shared-decision layer under `src/agentic_health_hackathon/shared_decision/` is the
+integration surface for the product flow:
+
+- stepped intake and feature mapping
+- safety and privacy rules attached to every result
+- controlled-data backend protocols for kNN and treatment ranking
+- per-drug-category logit coefficient scoring
+- optional literature lookup wiring through the journal lookup service
+
+Example:
+
+```bash
+shared-decision plan --condition fibromyalgia --symptom "delayed crash after activity" \
+  --severity housebound --treatment-group "LDN/immunomodulator" --json
+```
+
+Until the controlled `cleaned_v2` data backends are wired, the scaffold reports missing
+capabilities instead of fabricating neighbor or treatment evidence.
 
 ---
 

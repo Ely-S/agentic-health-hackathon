@@ -1,0 +1,91 @@
+{
+"antihistamine/mast-cell": [
+"antihistamine",
+"famotidine",
+"ketotifen",
+"h1 antagonist",
+"fexofenadine",
+"h2 antagonist",
+"cromolyn sodium",
+"hydroxyzine"
+],
+"autonomic/cardiovascular": [
+"beta blocker",
+"guanfacine",
+"propranolol",
+"ivabradine",
+"pyridostigmine",
+"electrolyte",
+"clonidine",
+"metoprolol"
+],
+"neuro-psychiatric": [
+"benzodiazepine",
+"antidepressant",
+"escitalopram",
+"fluvoxamine",
+"fluoxetine",
+"duloxetine",
+"gabapentin",
+"mirtazapine"
+],
+"LDN/immunomodulator": [
+"low dose naltrexone",
+"steroid",
+"prednisone",
+"naltrexone",
+"nonsteroidal anti-inflammatory drugs",
+"hydroxychloroquine",
+"corticosteroid",
+"rituximab"
+],
+"antiviral/anticoagulant": [
+"nattokinase",
+"paxlovid",
+"maraviroc",
+"aspirin",
+"antiviral",
+"anticoagulant",
+"valacyclovir",
+"serrapeptase"
+],
+"supplement/mitochondrial": [
+"probiotic",
+"nac",
+"magnesium",
+"coenzyme q10",
+"vitamin b12",
+"vitamin d",
+"creatine",
+"iron"
+],
+"peptide/experimental": [
+"thymosin alpha-1",
+"peptides",
+"bpc-157",
+"ss-31",
+"rapamycin",
+"thymosin beta-4",
+"peptide",
+"glucagon-like peptide"
+],
+"metabolic": [
+"tirzepatide",
+"glp-1",
+"zepbound",
+"metformin",
+"semaglutide",
+"glp-1 agonist",
+"glp-1/gip"
+],
+"procedure/device": [
+"nicotine patch",
+"nicotine",
+"hyperbaric oxygen therapy",
+"stellate ganglion block",
+"acupuncture",
+"novavax vaccine",
+"pfizer covid-19 vaccine",
+"covid-19 vaccine"
+]
+}

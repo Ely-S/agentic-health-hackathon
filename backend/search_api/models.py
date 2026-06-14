@@ -70,6 +70,7 @@ class TreatmentSummary(BaseModel):
     positive: int
     negative: int
     mixed: int
+    no_effect: int
     pct_positive: int
     normalized_score: float
     side_effects: list[str]
@@ -146,3 +147,129 @@ class MetadataResponse(BaseModel):
     post_count: int
     treatment_report_count: int
     treatment_user_count: int
+
+
+# ---- treatment-outcome prediction (our per-category logit models in the UI) ----
+
+class PredictRequest(BaseModel):
+    """The patient's tracked variables: condition keys + an optional functional-severity level."""
+    conditions: list[str] = Field(default_factory=list, max_length=20)
+    severity: str | None = Field(default=None, max_length=40)
+
+
+class TreatmentPrediction(BaseModel):
+    category: str                 # drug-mechanism class (the model unit)
+    p_positive: int               # predicted % chance of a positive experience for THIS profile
+    ci_lo: int                    # 95% CI lower bound (error bar) on p_positive
+    ci_hi: int                    # 95% CI upper bound (error bar) on p_positive
+    baseline: int                 # predicted % for a patient with none of the modelled conditions
+    delta: int                    # p_positive - baseline (how the profile shifts the odds)
+    n: int                        # reports the model was fit on (support / confidence)
+    drivers: list[str]            # which of the patient's variables pushed it up/down
+    confidence: str               # "good" | "limited" (from n)
+    sample_drugs: list[str] = []  # representative drugs in this class (for tooltips)
+    evidence_count: int = 0       # reports from similar-cohort patients for this class
+
+
+class PredictResponse(BaseModel):
+    profile: list[str]
+    predictions: list[TreatmentPrediction]
+    disclaimer: str = (
+        "Hypothesis-generating decision support from lived-experience reports — NOT medical "
+        "advice. Predictions are from a logistic model on observational, self-reported data."
+    )
+
+
+class Quote(BaseModel):
+    text: str
+    drug: str
+    sentiment: str
+    post_id: str
+
+
+class TreatmentEvidenceResponse(BaseModel):
+    """Predictions + a real similar-patient cohort + quoteable evidence per class."""
+    profile: list[str]
+    matched_patients: int
+    quoteable: int
+    predictions: list[TreatmentPrediction]
+    quotes: dict[str, list[Quote]] = {}        # category -> sample quotes from the cohort
+    disclaimer: str = (
+        "Decision support from lived-experience reports — NOT medical advice. Cohort = patients "
+        "with overlapping conditions; predictions are from a logistic model on self-reported data."
+    )
+
+
+class ComorbidityPattern(BaseModel):
+    condition: str                # canonical co-condition label
+    cohort_count: int             # patients in the profile cohort who also report it
+    cohort_pct: int               # % of the cohort
+    baseline_pct: int             # % of the whole patient population
+    lift: float                   # cohort_pct / baseline_pct (>1 = enriched in patients like you)
+
+
+class ComorbidityResponse(BaseModel):
+    """Diagnosis Evidence: conditions enriched among patients who share the profile."""
+    profile: list[str]
+    cohort_size: int
+    population: int
+    patterns: list[ComorbidityPattern] = []
+    disclaimer: str = (
+        "Co-occurrence patterns from self-reported data — NOT a diagnosis. Enrichment means a "
+        "condition is more common among patients like you than in the population; raise it with "
+        "a clinician, do not self-diagnose."
+    )
+
+
+class LitSearchRequest(BaseModel):
+    """Free-text (and/or canonical-concept) literature search over PubMed et al."""
+    query: str = Field(default="", max_length=200)
+    concepts: list[str] = Field(default_factory=list, max_length=10)
+    max_results: int = Field(default=10, ge=1, le=25)
+
+
+class LitClaim(BaseModel):
+    text: str
+    citation_ids: list[str] = []
+
+
+class LitSection(BaseModel):
+    title: str
+    claims: list[LitClaim] = []
+
+
+class LitArticle(BaseModel):
+    citation_id: str
+    title: str
+    url: str
+    journal: str | None = None
+    year: int | None = None
+    pmid: str | None = None
+    doi: str | None = None
+    evidence_type: str | None = None
+    signal: str | None = None        # positive | mixed_or_negative | neutral | insufficient
+    citation_count: int | None = None
+    open_access: bool = False
+    abstract: str = ""
+
+
+class LitSearchResponse(BaseModel):
+    query: str
+    disclaimer: str = ""
+    llm_summary: str | None = None   # narrative summary of the hits (when an LLM key is set)
+    summary_source: str = "deterministic"   # "llm" | "deterministic"
+    sections: list[LitSection] = []
+    articles: list[LitArticle] = []
+    error: str | None = None         # set if the lookup failed (network, no results)
+
+
+class ExplainRequest(BaseModel):
+    category: str = Field(min_length=1, max_length=80)
+    conditions: list[str] = Field(default_factory=list, max_length=20)
+    severity: str | None = Field(default=None, max_length=40)
+
+
+class ExplainResponse(BaseModel):
+    category: str
+    text: str
+    source: str   # "llm" or "fallback"

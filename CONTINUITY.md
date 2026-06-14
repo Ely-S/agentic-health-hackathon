@@ -23,8 +23,74 @@ and open questions. Unlike code, this file is meant to be **written to often**.
   tool, plus cluster / comorbidity / diagnosis visualizations. See `README.md`.
 - **The data:** `docs/DATASET.md` (source + structure), `docs/CODEBOOK.md` (fields + stats),
   `docs/PRIVACY.md` (anonymization + risk).
+- **★ CLEANED/CORRECTED ANALYSIS DATA (use this):** `s3://patientpunk/6_11_hackathon/cleaned_v2/`
+  — verbosity-controlled patient matrix (kNN-ready), corrected `drug_sentiment_clean.csv`
+  (`positive/weak` dropped — the sentiment over-call fix), `eds_any`, codebook, per-drug efficacy
+  coeffs, and analysis reports. Read its `README.md` first. A full sentiment re-run (cleaner,
+  5-class) is in progress and will replace `drug_sentiment_clean.csv`. **Trust contraindication
+  (negative) signals over "success" positives.** Ask a maintainer for a presigned link.
 - **Upstream:** the dataset + extraction pipeline come from PatientPunk
   (<https://github.com/Ely-S/PatientPunk>). We build the *app* on top.
+
+## Analysis work log — `clustering_analysis` branch (what we've built, 2026-06-13)
+> All of this lives on the **`clustering_analysis`** branch — **NOT yet merged to `main`**. If you're
+> reading CONTINUITY on `main` / GitHub's default view, the scripts and findings below will look
+> missing — switch to the branch. Data outputs are gitignored under `data/clean/`; the shareable
+> bundle is in S3 `cleaned_v2/` (see Orientation).
+
+**Pipeline (run in order):**
+| script | what it does | key output |
+|---|---|---|
+| `scripts/clean_encode.py` | multi-hot encode all 95 fields; normalize `symptom_trajectory` | `data/clean/model_matrix.csv`, `column_manifest.csv` |
+| `scripts/verbosity_control.py` | control the verbosity confound (IDF + L2/cosine) | `model_matrix_controlled.csv` (kNN-ready; `eds_any`, `n_fields_filled`) |
+| `scripts/knn_sanity.py` | validate similarity neighbours | finding: presence+cosine matches phenotype; IDF unneeded |
+| `scripts/treatment_heterogeneity.py` | drug×condition positive-rate descriptive (Fisher+FDR) | report |
+| `scripts/treatment_spectrum_models.py` | contraindication (harm) descriptive + per-drug adjusted logit | report |
+| `scripts/treatment_pooled_model.py` | pooled partially-pooled `drug_group×condition` model (bootstrap CIs) | report + heatmap |
+| `scripts/treatment_logit_predictive.py` | per-drug-group predictive logits | `data/clean/drug_logit_coefficients.csv` |
+| `scripts/rerun_filtered.py` | confirm dropping `positive/weak` preserves signals | finding: it does (~0 power cost) |
+
+**Findings (the science):**
+- Phenotype is a **continuum, not discrete clusters** → use **kNN similarity** on `model_matrix_controlled.csv`, not hard cluster labels.
+- Verbosity confound: presence encoding PC1↔fill r=**0.95** → IDF+L2/cosine → **0.02** (the L2/cosine is the lever; IDF unneeded/harmful for phenotype matching).
+- **Treatment response is heterogeneous = drug-class × syndrome.** Robust (negative-driven, trustworthy): neuro-psychiatric (SSRI-type) **WORSE for EDS** (strongest, most reproducible); autonomic/CV worse for MCAS; LDN **better for fibromyalgia**; metabolic better for fibro/SFN. Autonomic/CV broadly tolerated.
+- **Trust contraindication (negative) signals over "success" (positive) signals.**
+
+**Sentiment data-quality saga (important):**
+- Audited 88 labels vs source text: DeepSeek **over-calls POSITIVE** (~20–25%: uncredited multi-drug "stack" mentions, aspirational/just-started, and no-effect → positive). **Differential by drug** (supplements worst). Negatives audited **clean**.
+- Root cause: the classifier prompt's stack rule (`positive/weak` for any drug named in a "helped" stack) + no `neutral`/`no_effect` class.
+- **Fix A (stopgap, applied):** drop `positive/weak` → `drug_sentiment_clean.csv` (in `cleaned_v2/`). ~0 power cost (negatives, the bottleneck, untouched).
+- **Fix B (re-run — VALIDATED + ADOPTED 2026-06-13):** corrected prompt + full reclassify →
+  `pp_rebase/posts_rerun.db`. 5-class: positive **5,836** (was 7,463), negative **1,357** (harm-only),
+  **no_effect 1,094** (new), mixed 804, ~740 dropped. Validation: of the old `positive/weak` stratum,
+  **59% correctly moved out** of positive. **CAVEAT: `mixed` is over-inflated** (~⅓ neutrals, ~¼
+  partials-that-should-be-positive) → treat `mixed` as exclude; pos/neg/no_effect are clean.
+  **Adopted into S3 `cleaned_v2/`** as the 5-class `drug_sentiment.csv`. Prompt edits:
+  `pp_rebase/src/prompts/intervention_config.py`, `src/models.py`, `src/pipeline/classify.py`.
+
+**Data locations:** cleaned/corrected bundle → `s3://patientpunk/6_11_hackathon/cleaned_v2/`; source DB → `6_11_hackathon/patientpunk.db`; re-run output → `pp_rebase/posts_rerun.db` (local, not yet on S3).
+
+**Per-drug-category logit models — DONE** (`scripts/treatment_logit_rerun.py` →
+`cleaned_v2/drug_logit_coefficients.csv` + `drug_logit_report.txt`). One logit per category on the
+re-run data: `P(helped) ~ conditions + severity` (helped=positive vs negative+no_effect; mixed
+dropped; `symptom_trajectory` excluded as outcome-adjacent). Robust (p<0.05): **LDN→fibromyalgia
+(OR~5)**, supplement→ME/CFS failure, autonomic→POTS success / MCAS+PEM failure, severe-status→failure
+broadly. neuro-psych→EDS attenuated per-category (underpowered unpooled; the pooled model showed it).
+
+**Pooled model regenerated on re-run data** (`scripts/pooled_rerun.py` →
+`cleaned_v2/treatment_pooled_report.txt`): metabolic→fibro/SFN/dysautonomia better, autonomic→POTS
+better/MCAS worse, supplement→ME/CFS worse, LDN→MCAS worse; **neuro-psych→EDS no longer significant**
+(attenuated on the cleaned data — was the headline on old sentiment).
+
+**Similarity / "patients-like-me" engine — BUILT** (`scripts/similarity.py`): cosine kNN in the
+controlled space → similarity-weighted treatment ranking from the re-run sentiment, with a
+drug-class view + individual-drug view + population-vs-neighbour personalization (and a CAUTION
+list). Demo profiles are clinically coherent: MCAS → ketotifen/cromolyn; POTS →
+pyridostigmine/clonidine/beta-blockers; ME/CFS → LDN; metabolic top for dysautonomia-spectrum but
+worst for hypermobility. **This is the product core.**
+
+**Next:** wire `similarity.py` into the app/demo (intake → neighbours → ranked treatments + the
+contraindication flags); the data + models are all on the re-run 5-class basis now.
 
 ## Hard rules / conventions (don't break these)
 1. **NO patient data in this repo — ever.** No `.db`, no raw `.json`/`.csv` of patient text
@@ -85,6 +151,14 @@ the visualizations in case live rendering breaks.
   positive-reporting bias and small-n drugs (366 drugs have ≥5 reports; many have 1–2)?
 - [ ] **Normalization** — condition/drug free-text is high-cardinality (e.g. mcas vs "mast
   cell activation"); a controlled vocab sharpens both similarity and the viz.
+- [ ] **DATA QUALITY (BLOCKER) — DeepSeek over-calls POSITIVE** (asymmetric; ~10–20% false
+  positives; negatives reliable). The ~78–80% positive rate is partly artifact. Audit to pin the
+  rate + check if uniform vs differential; consider re-running sentiment with a neutral/no-effect
+  class. **Trust contraindication signals over soft positives.** See notes log 2026-06-13.
+- [x] **Treatment-effect heterogeneity + per-drug efficacy logits — DONE (branch `clustering_analysis`).**
+  Continuum, not clusters → model drug-class × syndrome. Headline: neuro-psych worse for EDS;
+  antihistamine→MCAS & LDN→fibromyalgia better. Scoring artifact:
+  `data/clean/drug_logit_coefficients.csv`. See notes log.
 - [ ] Clinical-study retrieval + synthesis (stretch).
 
 ## Notes log (append below — newest at the bottom)
@@ -141,3 +215,106 @@ the visualizations in case live rendering breaks.
   undercounted in `conditions` alone (86) → use `eds_any` (119, cross-field) — now a column in the
   controlled matrix. **Data:** cleaned matrices + reports + the DB bundled to controlled S3
   `s3://patientpunk/6_11_hackathon/` for Eli (ask a maintainer for a presigned link).
+- **2026-06-13 — Claude (Opus, w/ Shaun): treatment-effect heterogeneity + drug-efficacy logits + a SENTIMENT DATA-QUALITY problem. (CURRENT STATE / handoff.)**
+  All of this is on branch **`clustering_analysis`** (scripts committed; data outputs in gitignored
+  `data/clean/`; nothing merged to `main`).
+
+  **Where the clustering arc landed:** there are NO clean patient clusters — the spectrum is a
+  **continuum**. The actionable structure is not patient clusters but **drug-class × syndrome
+  interactions** (which treatments work/fail for which part of the spectrum).
+
+  **kNN similarity** (`scripts/knn_sanity.py`): controlled cosine space gives phenotype-coherent
+  neighbors. Correction to an earlier claim: plain **presence+cosine matches phenotype as well as /
+  better than the IDF-weighted** version (IDF down-weights the marker conditions); residual
+  neighbor-verbosity corr is mostly legitimate (verbosity ≈ comorbidity burden). App: cosine kNN on
+  dense fields, skip IDF.
+
+  **Treatment heterogeneity** (`treatment_heterogeneity.py`, `treatment_spectrum_models.py`,
+  `treatment_pooled_model.py`, `treatment_logit_predictive.py`):
+  - **Robust signals (survive pooling + FDR):** neuro-psychiatric (SSRI-type) drugs WORSE for
+    **EDS** (OR ~0.25–0.31; ~33% positive vs ~73% baseline — strongest, most reproducible finding);
+    autonomic/CV worse for MCAS (OR 0.44); supplement/mito worse for ME/CFS; antiviral/anticoag
+    worse for MCAS. **Better:** antihistamines for MCAS/housebound (adj OR ~2–4); **LDN for
+    fibromyalgia** (OR ~3.5, matches real off-label use); metabolic (metformin/GLP-1) for
+    fibromyalgia/SFN. Autonomic/CV broadly well-tolerated.
+  - **Pooled partially-pooled model** = the recommended vehicle: one L2 logistic over all reports,
+    `P(positive) ~ drug_group*condition`, patient-bootstrap CIs, broad mechanism drug groups for power.
+  - **Per-drug PREDICTIVE logits** → **`data/clean/drug_logit_coefficients.csv`** = a scoring
+    artifact (`logit = const + Σ coef·predictor`) for "given a patient's conditions, P(success) for
+    drug X." Widened groups cover 52% of reports.
+  - Cleaning: `symptom_trajectory` regex-normalized to 5 buckets in `clean_encode.py` (was 28 junk
+    values); matrices regenerated; verbosity control unchanged.
+
+  **⚠️ NEW PROBLEM — DeepSeek over-calls POSITIVE (sentiment data quality).** Audited labels vs
+  source text. Error is **asymmetric**: negatives reliable (6/6 read correct); positives
+  contaminated. Real mislabels found as `positive`: *"didn't move the needle either way"* (no
+  effect), *"[it] stopped working"* (past-positive-now-failed), *"just started last week, showing
+  promise"* (aspirational), a drug merely listed among 4 prescribed. Explicit-error-phrase floor =
+  3.4% of positives; manual read of 9 random positives → ~2 clear errors (~22%); true
+  false-positive rate likely **~10–20%**, NOT yet pinned. **Root cause:** schema has no
+  *neutral/no-effect* class, so neutral/early/recommendation mentions round up to positive (+ LLM
+  positivity lean). **Consequence:** the ~78–80% positive rate is partly artifact → **trust the
+  negative/contraindication signals, distrust the soft positives** (our headline findings ARE
+  negatives, so they hold; "success" signals are shakier). Relative comparisons hold *only if* the
+  over-call rate is uniform across drugs/conditions — **UNVERIFIED**.
+
+  **NEXT STEPS (in order):**
+  1. **Labeled sentiment audit (~100 reads)** → pin the false-positive rate AND test whether it's
+     uniform or differs by drug/condition (differential = biases the heterogeneity models).
+  2. If material/differential: **re-run DeepSeek sentiment with a corrected prompt** (add
+     neutral/no-effect class; ignore aspirational/just-started; require an attributed outcome).
+  3. **Finalize predictive logits conditions+severity only** — DROP `symptom_trajectory` as a
+     predictor (outcome-adjacent → "improving" → spurious "success" via reverse causation); wrap
+     `drug_logit_coefficients.csv` in a `predict_drug_success(conditions)` helper.
+  4. Optional: soft/overlapping clustering (NMF/archetypes) for "syndrome axes"; widen drug groups
+     further; multivariable disentangling of overlapping conditions.
+- **2026-06-13 - Codex (GPT-5): merged journal lookup + shared-decision scaffold into
+  `clustering_analysis`.** Brought over the importable `agentic_health_hackathon` package from
+  the journal lookup workstream and added it alongside the existing FastAPI explorer/backend,
+  without moving any raw patient data into git. New entry points:
+  - `journal-lookup` for literature review / PubMed-first evidence retrieval.
+  - `shared-decision plan` for stepped intake, safety/privacy framing, logit coefficient scoring,
+    and explicit missing-capability reporting for controlled-data backends.
+
+  The shared-decision orchestrator now has typed hooks for four layers: controlled-data kNN,
+  nearest-neighbor treatment ranking, per-drug-category logit coefficients, and optional journal
+  lookup. It does not fabricate unavailable data: if `cleaned_v2/model_matrix_controlled.csv`,
+  `cleaned_v2/drug_sentiment.csv`, or logit coefficients are not supplied through a backend, the
+  result reports that capability as missing. Literature lookup is disabled by default and only runs
+  when a journal backend is supplied and explicitly requested.
+
+  Packaging was merged rather than overwritten: the branch still installs `backend.*` for the
+  FastAPI app and now also installs `agentic_health_hackathon.*` from `src/`.
+- **2026-06-13 - Codex (GPT-5): drug-category definitions.** The current broad drug
+  categories are practical regex groups for power and product display, not a formal
+  pharmacology ontology. Matching is first-match in script order, so a drug/intervention lands
+  in one broad category for a given model run. The individual-drug view in `scripts/similarity.py`
+  still keeps exact drug names.
+
+  | category | includes / examples | product interpretation |
+  |---|---|---|
+  | `antihistamine/mast-cell` | antihistamines; H1/H2 blockers; cetirizine, loratadine, fexofenadine, famotidine, diphenhydramine/Benadryl, hydroxyzine; cromolyn, ketotifen, quercetin; "mast cell"; nasal sprays in widened/rerun models | MCAS, histamine, allergy-style symptom management, and mast-cell stabilization |
+  | `autonomic/cardiovascular` | beta blockers; propranolol, metoprolol, bisoprolol, atenolol, nadolol; ivabradine/Corlanor; midodrine; fludrocortisone; salt, fluids, electrolytes, compression; guanfacine, clonidine, pyridostigmine/Mestinon in widened/rerun models | POTS, dysautonomia, orthostatic intolerance, tachycardia, blood pressure, or volume support |
+  | `neuro-psychiatric` | SSRIs/SNRIs; sertraline, fluoxetine, escitalopram, duloxetine, venlafaxine; Prozac, Zoloft, Lexapro, Cymbalta; Abilify/aripiprazole; benzodiazepines/Xanax; gabapentin, pregabalin; antidepressants, fluvoxamine, mirtazapine, amitriptyline, nortriptyline | nervous-system, mood, sleep, pain, cognition, sensory, or neuro-psych medication bucket |
+  | `LDN/immunomodulator` | naltrexone/LDN; prednisone/steroids; IVIG; rituximab; hydroxychloroquine; colchicine in most logit/pooled runs | immune modulation and anti-inflammatory treatment bucket, with LDN as the high-volume anchor |
+  | `antiviral/anticoagulant` | Paxlovid/nirmatrelvir; antiviral, valacyclovir/Valtrex, famciclovir; nattokinase, serrapeptase, aspirin, anticoagulants, apixaban, rivaroxaban; lumbrokinase and maraviroc in widened/rerun models | viral persistence/reactivation, clotting, anticoagulant, fibrinolytic, or antiviral bucket |
+  | `supplement/mitochondrial` | magnesium, CoQ10/coenzyme/ubiquinol, B12/methylcobalamin, B-complex, vitamin D, vitamin C, omega/fish oil, NAD/nicotinamide, creatine, carnitine, D-ribose, NAC, probiotics, iron, melatonin, thiamine, methylene blue, glutathione, CBD/cannabidiol, alpha-lipoic acid | supplements, mitochondrial support, nutritional support, sleep, or oxidative-stress support |
+  | `metabolic` | metformin; GLP-1 drugs; tirzepatide, semaglutide, Ozempic, Zepbound, Mounjaro; low-dose lithium in older predictive scripts | metabolic, insulin/glucose, weight-loss, or metabolism-related interventions |
+  | `peptide/experimental` | BPC-157, SS-31, thymosin, peptides, rapamycin/sirolimus | low-volume experimental or peptide-style interventions, often underpowered |
+  | `procedure/device` | nicotine patch, hyperbaric oxygen/HBOT, stellate ganglion block, acupuncture, vagus stimulation, red light, vaccine | non-oral procedure, device, stimulation, exposure, or intervention bucket |
+
+  Older descriptive scripts also have narrower categories such as `mast-cell stabilizer`,
+  `beta blocker`, `ivabradine`, `POTS volume (salt/fludro/midodrine)`, `SSRI/SNRI`,
+  `metformin`, `magnesium`, `CoQ10/mito`, `B12/B-complex`, `vitamin D`, and `LDA
+  (low-dose abilify)`. Treat those as fine-grained audit/reporting buckets. The broad
+  categories above are the current product-facing/logit categories.
+- **2026-06-13 — Claude (Opus, w/ Shaun): DB hygiene + treatment predictor.** Corrected
+  `patientpunk.db` / `posts.db` (5-class re-run sentiment) uploaded to controlled S3
+  `s3://patientpunk/6_11_hackathon/`; **removed both DBs from the repo tree** (`git rm --cached`;
+  they're gitignored). Backend now reads `PATIENTPUNK_DB` (defaults to repo-root); README "Get the
+  data" step fetches from S3. New: `POST /api/predict` + `frontend/treatment_predictor.html` —
+  patient's tracked variables → each drug class's predicted P(positive experience), via the
+  per-category logits (`backend/search_api/drug_logit_coefficients.csv`, fit on corrected data).
+  **⚠ THE REPO IS PUBLIC and the DBs are still in git HISTORY** (Eli's commit `4954aeb`) — patient
+  data is publicly recoverable until a **coordinated `git filter-repo` + force-push across `main` +
+  all branches** (everyone re-clones). Tree removal alone does NOT fix this.

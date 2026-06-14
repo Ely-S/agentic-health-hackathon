@@ -225,6 +225,8 @@ __marimo__/
 # ============================================================================
 # Databases (patient / corpus)
 *.db
+*.db-wal
+*.db-shm
 *.sqlite
 *.sqlite3
 # Data serialization formats
@@ -259,6 +261,7 @@ output*/
 *.csv
 *.tsv
 !docs/*.csv
+!backend/search_api/drug_logit_coefficients.csv
 
 # Frontend (a hackathon app may add a JS UI)
 node_modules/

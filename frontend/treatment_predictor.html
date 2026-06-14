@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Treatment Predictor — Patients Like Me</title>
+<style>
+  :root{
+    --bg:#f5f1e8; --bg-strong:#fffaf2; --panel:rgba(255,252,246,0.84); --line:rgba(34,39,37,0.1);
+    --text:#1f2422; --muted:#66706a; --moss:#4f6654; --moss-soft:#d9e3d8; --amber:#9b6a34;
+    --amber-soft:#f1e4cf; --stone:#ece6d7; --clay:#a35442;
+    --shadow:0 22px 60px rgba(42,48,45,0.08); --radius-xl:26px; --radius-lg:18px; --radius-md:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;min-height:100%;}
+  body{ color:var(--text); font-family:"Avenir Next","Segoe UI",sans-serif;
+    background:radial-gradient(circle at top left,rgba(79,102,84,0.1),transparent 28%),
+      radial-gradient(circle at bottom right,rgba(155,106,52,0.09),transparent 24%),
+      linear-gradient(180deg,#f8f4ec 0%,var(--bg) 100%); }
+  .shell{max-width:980px;margin:0 auto;padding:28px;}
+  .banner{display:flex;justify-content:space-between;gap:16px;padding:12px 18px;
+    border:1px solid rgba(155,106,52,0.18);border-radius:999px;background:rgba(255,248,238,0.9);
+    color:#6d5636;font-size:13px;letter-spacing:0.02em;}
+  h1{font-size:30px;margin:22px 0 6px;}
+  .lede{color:var(--muted);max-width:680px;margin:0 0 8px;line-height:1.55;}
+  .back-link{color:var(--moss);text-decoration:none;font-size:14px;}
+  .nav-row{margin:14px 0 22px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-xl);
+    box-shadow:var(--shadow);padding:24px;margin-bottom:20px;}
+  .section-head h2{margin:0 0 2px;font-size:18px;}
+  .section-head span{color:var(--muted);font-size:13px;}
+  .chips{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0 4px;}
+  .chip{border:1px solid var(--line);border-radius:999px;padding:8px 15px;cursor:pointer;
+    user-select:none;background:var(--bg-strong);font-size:14px;transition:.12s;}
+  .chip.on{background:var(--moss);border-color:var(--moss);color:#fff;}
+  .field{margin-top:16px;}
+  .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;}
+  select{background:var(--bg-strong);color:var(--text);border:1px solid var(--line);
+    border-radius:var(--radius-md);padding:10px 12px;font-size:14px;min-width:240px;}
+  button{margin-top:18px;background:var(--moss);color:#fff;border:0;border-radius:999px;
+    padding:12px 26px;font-size:15px;font-weight:600;cursor:pointer;}
+  button:disabled{opacity:.55;cursor:default;}
+  .profile{color:var(--muted);font-size:14px;margin-bottom:6px;}
+  .row{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid var(--line);}
+  .row:first-of-type{border-top:0;}
+  .name{width:200px;flex:none;font-weight:600;font-size:14.5px;}
+  .barwrap{flex:1;}
+  .track{position:relative;height:26px;background:var(--stone);border-radius:8px;overflow:hidden;}
+  .ci{position:absolute;top:0;height:100%;border-radius:8px;opacity:.55;}
+  .mark{position:absolute;top:-2px;width:3px;height:30px;border-radius:2px;}
+  .scale{display:flex;justify-content:space-between;color:var(--muted);font-size:10.5px;margin-top:3px;}
+  .meta{width:240px;flex:none;text-align:right;font-size:12.5px;color:var(--muted);}
+  .meta b{color:var(--text);font-size:15px;}
+  .tag{font-size:10.5px;border:1px solid var(--line);border-radius:6px;padding:1px 6px;margin-left:6px;}
+  .lim{color:var(--amber);border-color:var(--amber);}
+  .disc{color:var(--muted);font-size:12.5px;margin-top:16px;border-top:1px solid var(--line);padding-top:12px;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="banner">
+    <span><strong>Self-reported, AI-extracted patient experience.</strong> Not medical advice.</span>
+    <span>Predicted chance a treatment class helps someone with your profile, with confidence intervals.</span>
+  </div>
+
+  <h1>Will this treatment likely help <em>me</em>?</h1>
+  <p class="lede">Select the variables we track that apply to you. We score each treatment class's
+    chance of a <strong>positive experience</strong> for patients like you — from a logistic model
+    fit on the corrected, lived-experience reports. Bars show the estimate; the band is the 95% CI.</p>
+  <div class="nav-row"><a class="back-link" href="weighted_keyword_explorer.html">← Back to Patients Like Me</a></div>
+
+  <div class="panel">
+    <div class="section-head"><h2>Your profile</h2><span>conditions we extract, plus functional status</span></div>
+    <div class="chips" id="conds">
+      <div class="chip" data-k="pots">POTS</div>
+      <div class="chip" data-k="mcas">MCAS</div>
+      <div class="chip" data-k="dysautonomia">Dysautonomia</div>
+      <div class="chip" data-k="me_cfs">ME/CFS</div>
+      <div class="chip" data-k="pem">PEM</div>
+      <div class="chip" data-k="eds">EDS / hypermobility</div>
+      <div class="chip" data-k="small_fiber_neuropathy">Small-fiber neuropathy</div>
+      <div class="chip" data-k="fibromyalgia">Fibromyalgia</div>
+    </div>
+    <div class="field">
+      <label>Functional status (one clean ladder, mild → bedbound)</label>
+      <select id="sev">
+        <option value="">— not specified —</option>
+        <option value="mild">Mild — functional with limits</option>
+        <option value="moderate">Moderate — significantly reduced</option>
+        <option value="mobility_limited">Mobility-limited — needs aids</option>
+        <option value="housebound">Housebound</option>
+        <option value="bedbound">Bedbound</option>
+      </select>
+    </div>
+    <button id="go">Predict treatments</button>
+  </div>
+
+  <div class="panel" id="result" style="display:none">
+    <div class="section-head"><h2>Predicted chance of a positive experience</h2>
+      <span>estimate (marker) with 95% CI (band) · vs your baseline · what drove it</span></div>
+    <div class="profile" id="profile"></div>
+    <div id="rows"></div>
+    <div class="disc" id="disc"></div>
+  </div>
+</div>
+
+<script>
+const selected = new Set();
+document.querySelectorAll('#conds .chip').forEach(ch => ch.onclick = () => {
+  ch.classList.toggle('on');
+  const k = ch.dataset.k; selected.has(k) ? selected.delete(k) : selected.add(k);
+});
+const moss='#4f6654', amber='#9b6a34', clay='#a35442';
+function ink(p){ return p>=70?moss : p>=50?amber : clay; }
+function band(p){ return p>=70?'rgba(79,102,84,.45)' : p>=50?'rgba(155,106,52,.40)' : 'rgba(163,84,66,.38)'; }
+
+document.getElementById('go').onclick = async () => {
+  const btn=document.getElementById('go'); btn.disabled=true; btn.textContent='Predicting…';
+  try{
+    const body={conditions:[...selected], severity:document.getElementById('sev').value||null};
+    const res=await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data=await res.json();
+    document.getElementById('profile').textContent = data.profile.length
+      ? 'Profile: '+data.profile.join(' · ') : 'No variables selected — showing the baseline population.';
+    const rows=document.getElementById('rows'); rows.innerHTML='';
+    data.predictions.forEach(p=>{
+      const d=document.createElement('div'); d.className='row';
+      const dtxt = p.delta===0 ? 'same as baseline' : (p.delta>0?'▲ +'+p.delta:'▼ '+p.delta)+'pp vs baseline';
+      d.innerHTML =
+        `<div class="name">${p.category}</div>
+         <div class="barwrap">
+           <div class="track">
+             <div class="ci" style="left:${p.ci_lo}%;width:${Math.max(1,p.ci_hi-p.ci_lo)}%;background:${band(p.p_positive)}"></div>
+             <div class="mark" style="left:${p.p_positive}%;background:${ink(p.p_positive)}"></div>
+           </div>
+           <div class="scale"><span>0%</span><span>50%</span><span>100%</span></div>
+         </div>
+         <div class="meta"><b style="color:${ink(p.p_positive)}">${p.p_positive}%</b>
+           <span> [${p.ci_lo}–${p.ci_hi}]</span>${p.confidence==='limited'?'<span class="tag lim">limited n='+p.n+'</span>':' · n='+p.n}
+           <br>${dtxt}${p.drivers.length?' · '+p.drivers.join(', '):''}</div>`;
+      rows.appendChild(d);
+    });
+    document.getElementById('disc').textContent = data.disclaimer;
+    document.getElementById('result').style.display='block';
+  }catch(e){ alert('Prediction failed: '+e); }
+  finally{ btn.disabled=false; btn.textContent='Predict treatments'; }
+};
+</script>
+</body>
+</html>

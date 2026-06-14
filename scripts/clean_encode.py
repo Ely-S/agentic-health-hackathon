@@ -103,10 +103,35 @@ def build_lut(vocab):
 
 LUT = {f: build_lut(v) for f, v in VOCAB.items()}
 
+# Regex normalization for free-text fields the exact-match VOCAB can't cover (e.g.
+# symptom_trajectory had "80% recovered", "push-crash", "slowly getting better", ...).
+# Rules are tried in order; first match wins; runs before the exact LUT.
+REGEX_RULES = {
+    "symptom_trajectory": [
+        (re.compile(r"relaps|fluctuat|\bwax|comes and goes|push.?crash|remitting"), "relapsing"),
+        (re.compile(r"(fully |mostly )?recovered|resolved|remission|\d+\s*%\s*recover"), "recovered"),
+        (re.compile(r"improv|better|recovering"), "improving"),
+        (re.compile(r"declin|worsen|progressive|deteriorat|set.?back|getting worse"), "declining"),
+        (re.compile(r"stable|persistent|permanent|plateau|unchanged|no improvement|not improv|not getting better|no change"), "stable"),
+    ],
+    # one clean ordered ladder (mild < moderate < mobility_limited < housebound < bedbound);
+    # collapses the overlapping severity-adjective and functional-impairment values.
+    "functional_status_tier": [
+        (re.compile(r"bedbound|bedridden|bed.?bound|very severe|severely disabled"), "bedbound"),
+        (re.compile(r"moderate"), "moderate"),
+        (re.compile(r"housebound|homebound|house.?bound|\bsevere"), "housebound"),
+        (re.compile(r"mobility|wheelchair|rollator|walker|\bcane\b|scooter"), "mobility_limited"),
+        (re.compile(r"mild|mostly functional|mostly recovered|partially functional|working|functional|recovered"), "mild"),
+    ],
+}
+
 def normalize(field, val):
     c = clean(val)
     if not c:
         return None
+    for rx, canon in REGEX_RULES.get(field, []):
+        if rx.search(c):
+            return canon
     lut = LUT.get(field)
     return lut.get(c, c) if lut else c
 
