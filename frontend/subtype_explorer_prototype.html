@@ -1301,10 +1301,9 @@
                 </div>
                 <div class="card-foot">
                   <div class="actions">
-                    <button class="ghost" data-why="${p.category}">Why might this help?</button>
+                    <button class="ghost" data-why="${p.category}">Why might this help?${quotes.length ? " <span class='sx-qmeta'>· from " + quotes.length + " patient report" + (quotes.length > 1 ? "s" : "") + "</span>" : ""}</button>
                   </div>
                   <div class="sx-why" data-whytext="${p.category}" hidden></div>
-                  ${quotes.length ? '<div class="sx-quotes">' + quotes.map((q) => `<blockquote class="sx-quote">“${q.text}” <span class="sx-qmeta">— ${q.drug}, ${q.sentiment}</span></blockquote>`).join("") + "</div>" : ""}
                 </div>
               </article>`;
           })
@@ -1317,9 +1316,15 @@
             if (box.dataset.loaded) { box.hidden = !box.hidden; return; }
             const orig = btn.textContent; btn.textContent = "Thinking…"; btn.disabled = true;
             try {
+              const catQuotes = ((window.EVIDENCE || {}).quotes || {})[cat] || [];
               const res = await fetch("/api/explain", {
                 method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ category: cat, conditions: (window.SX_PROFILE || {}).conditions || [], severity: (window.SX_PROFILE || {}).severity || null }),
+                body: JSON.stringify({
+                  category: cat,
+                  conditions: (window.SX_PROFILE || {}).conditions || [],
+                  severity: (window.SX_PROFILE || {}).severity || null,
+                  quotes: catQuotes.map((q) => `${q.text} (${q.drug}, ${q.sentiment})`),
+                }),
               });
               const data = await res.json();
               box.textContent = data.text; box.hidden = false; box.dataset.loaded = "1";

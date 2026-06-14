@@ -235,17 +235,28 @@ def explain(req: ExplainRequest) -> ExplainResponse:
     samples = ", ".join(SAMPLE_DRUGS.get(req.category, [])[:5])
     pct = pred.p_positive if pred else None
     drivers = ", ".join(pred.drivers) if pred and pred.drivers else ""
+    quote_block = ""
+    if req.quotes:
+        joined = "\n".join(f'- "{q.strip()[:280]}"' for q in req.quotes[:8] if q and q.strip())
+        if joined:
+            quote_block = (
+                "\nReal reports from similar patients about this treatment class:\n" + joined + "\n"
+            )
     prompt = (
         "You are a careful clinical-evidence assistant for a Long COVID patient-experience tool. "
         "This is NOT medical advice. "
         f"Patient profile: {profile}. Treatment class: '{req.category}' (example drugs: {samples}). "
         f"A logistic model fit on patient-reported outcomes predicts about {pct}% chance of a positive "
-        f"experience for patients like this" + (f", most influenced by {drivers}" if drivers else "") + ". "
-        "In 2-3 short, plain-language sentences: (1) what this class of treatment does / its proposed "
-        "mechanism in Long COVID, and (2) why it might or might not help THIS specific profile. "
-        "Be honest and non-prescriptive; do not invent dosing or overstate certainty."
+        f"experience for patients like this" + (f", most influenced by {drivers}" if drivers else "") + "."
+        + quote_block +
+        " In 2-3 short, plain-language sentences explain why this class might or might not help THIS "
+        "specific profile. "
+        + ("Ground your reasoning in the real reports above — paraphrase what patients experienced "
+           "(don't quote verbatim) and connect it to the mechanism. " if quote_block else
+           "Cover what the class does / its proposed mechanism, then why it fits this profile. ")
+        + "Be honest and non-prescriptive; do not invent dosing or overstate certainty."
     )
-    text = _llm(prompt)
+    text = _llm(prompt, max_tokens=260)
     if text:
         return ExplainResponse(category=req.category, text=text, source="llm")
 

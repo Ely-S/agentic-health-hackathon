@@ -267,6 +267,7 @@ class ExplainRequest(BaseModel):
     category: str = Field(min_length=1, max_length=80)
     conditions: list[str] = Field(default_factory=list, max_length=20)
     severity: str | None = Field(default=None, max_length=40)
+    quotes: list[str] = Field(default_factory=list, max_length=12)   # real cohort quotes to ground the explanation
 
 
 class ExplainResponse(BaseModel):
