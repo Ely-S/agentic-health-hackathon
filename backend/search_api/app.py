@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 
 from backend.search_api.models import (
+    ChatRequest,
+    ChatResponse,
     ComorbidityResponse,
     KeywordSearchRequest,
     KeywordSearchResponse,
@@ -36,6 +38,7 @@ WEIGHTED_PAGE = FRONTEND_DIR / "weighted_keyword_explorer.html"
 PROTOTYPE_PAGE = FRONTEND_DIR / "subtype_explorer_prototype.html"
 PREDICT_PAGE = FRONTEND_DIR / "treatment_predictor.html"
 LITSEARCH_JS = FRONTEND_DIR / "litsearch.js"
+CHAT_JS = FRONTEND_DIR / "chat.js"
 
 app = FastAPI(
     title="PatientPunk Weighted Search API",
@@ -107,6 +110,51 @@ def api_explain(request: ExplainRequest) -> ExplainResponse:
     return explain_treatment(request)
 
 
+@app.post("/api/chat", response_model=ChatResponse)
+def api_chat(request: ChatRequest) -> ChatResponse:
+    """Data-grounded chatbot turn: Rumi tool-loop answer → runtime SafetyFilter gate.
+
+    Never 500s — any LLM/network/import failure degrades to a graceful 200 fallback
+    so the widget always gets a usable reply. The server is stateless; multi-turn
+    memory comes from Rumi keyed on the client-supplied conversation_id.
+    """
+    # Imported lazily so the rest of the API (and its tests) never pays the Rumi
+    # import cost, and a missing OPENROUTER_API_KEY can't break unrelated routes.
+    from agentic_health_hackathon.chatbot.runtime import answer
+    from agentic_health_hackathon.shared_decision.safety import SafetyFilter
+
+    profile = {"conditions": list(request.profile.conditions), "severity": request.profile.severity}
+    try:
+        result = answer(
+            request.message,
+            request.conversation_id,
+            profile,
+            request.current_predictions,
+        )
+        gated = SafetyFilter().apply(result["raw_text"], had_tool_calls=result["had_tool_calls"])
+        return ChatResponse(
+            assistant_message=gated.text,
+            sources=result.get("sources", []),
+            disclaimers=gated.disclaimers,
+            blocked=gated.blocked,
+            conversation_id=request.conversation_id,
+        )
+    except Exception:
+        # Graceful fallback — still carry the safety disclaimer.
+        fallback = SafetyFilter().apply(
+            "I'm having trouble reaching the data right now. Please try again in a moment — "
+            "and remember I only show what patients reported, for discussion with your doctor.",
+            had_tool_calls=False,
+        )
+        return ChatResponse(
+            assistant_message=fallback.text,
+            sources=[],
+            disclaimers=fallback.disclaimers,
+            blocked=False,
+            conversation_id=request.conversation_id,
+        )
+
+
 @app.get("/api/post/{post_id}", response_model=PostDetailResponse)
 def api_post_detail(post_id: str) -> PostDetailResponse:
     post = get_post_detail(post_id)
@@ -133,3 +181,8 @@ def treatment_predictor() -> FileResponse:
 @app.get("/litsearch.js", include_in_schema=False)
 def litsearch_js() -> FileResponse:
     return FileResponse(LITSEARCH_JS, media_type="application/javascript")
+
+
+@app.get("/chat.js", include_in_schema=False)
+def chat_js() -> FileResponse:
+    return FileResponse(CHAT_JS, media_type="application/javascript")

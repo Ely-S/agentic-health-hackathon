@@ -1496,6 +1496,15 @@
           .filter(Boolean);
         return (conds.length ? conds.join(" ") + " " : "") + "long covid treatment";
       };
+
+      // Let the chat widget ground on what's currently on screen (profile + prediction cards).
+      window.dashboardChatContext = function () {
+        return {
+          profile: window.SX_PROFILE || { conditions: [], severity: null },
+          predictions: (window.EVIDENCE && window.EVIDENCE.predictions) || [],
+        };
+      };
     </script>
+    <script src="/chat.js"></script>
   </body>
 </html>

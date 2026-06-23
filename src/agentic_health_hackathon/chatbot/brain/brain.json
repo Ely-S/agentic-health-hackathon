@@ -1,0 +1,6 @@
+{
+  "model": "deepseek/deepseek-chat",
+  "temperature": 0.3,
+  "context_window": 16,
+  "max_tokens": 700
+}

@@ -273,3 +273,27 @@ class ExplainResponse(BaseModel):
     category: str
     text: str
     source: str   # "llm" or "fallback"
+
+
+# ---- chatbot (the data-grounded "Patients Like Me" assistant) ----
+
+class ChatProfile(BaseModel):
+    """The on-screen profile the frontend passes with each chat message."""
+    conditions: list[str] = Field(default_factory=list, max_length=20)
+    severity: str | None = Field(default=None, max_length=40)
+
+
+class ChatRequest(BaseModel):
+    """One chat turn: the message + the conversation id + the on-screen context."""
+    message: str = Field(min_length=1, max_length=2000)
+    conversation_id: str = Field(min_length=1, max_length=80)
+    profile: ChatProfile = Field(default_factory=ChatProfile)
+    current_predictions: list[dict] = Field(default_factory=list)
+
+
+class ChatResponse(BaseModel):
+    assistant_message: str
+    sources: list[str] = []
+    disclaimers: list[str] = []
+    blocked: bool = False
+    conversation_id: str

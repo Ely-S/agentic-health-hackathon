@@ -3,12 +3,13 @@ name = "agentic-health-hackathon"
 version = "0.1.0"
 description = "PatientPunk weighted keyword explorer with FastAPI backend and static frontend."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.128.0",
   "httpx>=0.28.1,<0.29",
   "pydantic>=2.11.0,<3",
   "rich>=14.0.0,<15",
+  "rumi",
   "streamlit>=1.46.0,<2",
   "typer>=0.16.0,<0.17",
   "uvicorn>=0.30.0",
@@ -25,6 +26,10 @@ dev = [
 [project.scripts]
 journal-lookup = "agentic_health_hackathon.journal_lookup.cli:app"
 shared-decision = "agentic_health_hackathon.shared_decision.cli:app"
+shared-decision-chat = "agentic_health_hackathon.chatbot.cli:app"
+
+[tool.uv.sources]
+rumi = { git = "https://github.com/cjleemesotes/Rumi.git", rev = "v0.1.0" }
 
 [build-system]
 requires = ["setuptools>=68.0"]
@@ -33,6 +38,9 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src", "."]
 include = ["agentic_health_hackathon*", "backend*"]
+
+[tool.setuptools.package-data]
+"agentic_health_hackathon.chatbot" = ["brain/*.json"]
 
 [tool.uvicorn]
 factory = false
@@ -44,7 +52,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 src = ["src", "tests"]
 extend-exclude = ["backend", "scripts"]
 
@@ -63,7 +71,7 @@ ignore = [
 ]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 packages = ["agentic_health_hackathon"]
 strict = true
 warn_unused_ignores = true
