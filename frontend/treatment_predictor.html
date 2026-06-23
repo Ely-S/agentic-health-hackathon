@@ -120,6 +120,8 @@ document.getElementById('go').onclick = async () => {
     const body={conditions:[...selected], severity:document.getElementById('sev').value||null};
     const res=await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const data=await res.json();
+    // Stash the on-screen context so the chat widget can ground answers in it.
+    window.__lastPredict = { profile: [...selected], severity: body.severity, predictions: data.predictions };
     document.getElementById('profile').textContent = data.profile.length
       ? 'Profile: '+data.profile.join(' · ') : 'No variables selected — showing the baseline population.';
     const rows=document.getElementById('rows'); rows.innerHTML='';
@@ -146,5 +148,6 @@ document.getElementById('go').onclick = async () => {
   finally{ btn.disabled=false; btn.textContent='Predict treatments'; }
 };
 </script>
+<script src="/chat.js"></script>
 </body>
 </html>

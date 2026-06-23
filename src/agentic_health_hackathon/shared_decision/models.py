@@ -234,3 +234,23 @@ class DecisionSupportResult(BaseModel):
     treatment_options: list[TreatmentOptionEvidence] = Field(default_factory=list)
     missing_capabilities: list[MissingCapability] = Field(default_factory=list)
     next_actions: list[str] = Field(default_factory=list)
+
+
+class ConversationContext(BaseModel):
+    """Multi-turn state for the dashboard chatbot — keeps thread state out of raw LLM memory.
+
+    The server is stateless (the client owns the thread); this model is the shape
+    the chatbot reasons over per turn. ``profile`` is the on-screen
+    ``{conditions, severity}`` the frontend passes; ``profile_changed_flag`` is set
+    when the user edits the profile mid-conversation so the bot can acknowledge the
+    drift. Reuses the existing :class:`SafetyPolicy` for disclaimer text.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    conversation_id: str
+    profile: dict[str, object] = Field(default_factory=dict)
+    turn_count: int = Field(default=0, ge=0)
+    last_evidence_summary: str | None = None
+    profile_changed_flag: bool = False
+    safety: SafetyPolicy = Field(default_factory=SafetyPolicy)
